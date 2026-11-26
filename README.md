@@ -70,14 +70,27 @@ One skill package and one universal hook adapter (`scripts/hook_adapter.py`) cov
 
 ## Installation
 
-### Option 1: Install as an AI Agent Skill (Recommended)
+### Option 1: Install as an AI Agent Skill via `npx skills` (Recommended)
+
+Use the nested skill path `/skills/fireworks-branch-killer` so `skills` CLI installs the complete package (`SKILL.md`, `scripts/`, `bin/`, `references/`, `assets/`, `tests/`):
 
 ```bash
-npx -y skills add yizhiyanhua-ai/fireworks-branch-killer/skills/fireworks-branch-killer \
+npx -y skills@1.5.17 add \
+  yizhiyanhua-ai/fireworks-branch-killer/skills/fireworks-branch-killer \
   --agent codex claude-code -g -y --copy
 ```
 
-### Option 2: Clone & Auto-Wire All 7 Harnesses
+### Option 2: Zero-Install CLI via `npx`
+
+Run `fbk` directly from GitHub without cloning or global install:
+
+```bash
+npx -y github:yizhiyanhua-ai/fireworks-branch-killer scan --root . --fast --no-size
+```
+
+*(Once published to npmjs registry, `npx -y @yizhiyanhua-ai/fireworks-branch-killer` works identically.)*
+
+### Option 3: Clone & Auto-Wire All 7 Harnesses
 
 ```bash
 git clone https://github.com/yizhiyanhua-ai/fireworks-branch-killer.git

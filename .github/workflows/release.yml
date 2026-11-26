@@ -1,0 +1,46 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Verify tag matches package version
+        run: |
+          test "$GITHUB_REF_NAME" = "v$(node -p "require('./package.json').version")"
+      - run: |
+          git config --global user.email "ci@example.com"
+          git config --global user.name "CI Release"
+      - run: node --check bin/fbk.js
+      - run: bash -n tools/install-canary.sh
+      - run: python3 -m unittest discover -s tests -v
+      - run: python3 tools/check_project_consistency.py
+      - run: python3 tools/distribution.py --check
+      - run: python3 tools/distribution.py --build-release --output-dir dist
+      - name: Verify public tagged skill installation
+        run: ./tools/install-canary.sh "yizhiyanhua-ai/fireworks-branch-killer/skills/fireworks-branch-killer#$GITHUB_REF_NAME"
+      - name: Create or update GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --notes-file CHANGELOG.md --title "Fireworks Branch Killer $GITHUB_REF_NAME"
+          fi

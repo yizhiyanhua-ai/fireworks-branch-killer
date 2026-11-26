@@ -23,12 +23,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
       - run: |
           git config --global user.email "ci@example.com"
           git config --global user.name "CI Runner"
+      - run: node --check bin/fbk.js
+      - run: bash -n tools/install-canary.sh
       - run: python3 -m py_compile scripts/*.py tools/*.py
       - run: python3 -m unittest discover -s tests -v
-      - run: python3 scripts/fbk.py version --format json
+      - run: node bin/fbk.js version --format json
 
   distribution-and-consistency:
     runs-on: ubuntu-latest
@@ -45,3 +50,4 @@ jobs:
       - run: python3 tools/check_project_consistency.py
       - run: python3 tools/distribution.py --check
       - run: npm pack --dry-run --json
+      - run: ./tools/install-canary.sh "$PWD/skills/fireworks-branch-killer"

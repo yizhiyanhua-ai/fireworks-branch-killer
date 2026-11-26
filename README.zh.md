@@ -70,14 +70,27 @@
 
 ## 安装方式
 
-### 方式一：作为 AI Agent Skill 一键安装（推荐）
+### 方式一：通过 `npx skills` 一键安装到 Codex / Claude Code（推荐）
+
+请使用完整嵌套路径 `/skills/fireworks-branch-killer`，确保 `skills` CLI 复制完整工具链（`SKILL.md`、`scripts/`、`bin/`、`references/`、`assets/`、`tests/`）：
 
 ```bash
-npx -y skills add yizhiyanhua-ai/fireworks-branch-killer/skills/fireworks-branch-killer \
+npx -y skills@1.5.17 add \
+  yizhiyanhua-ai/fireworks-branch-killer/skills/fireworks-branch-killer \
   --agent codex claude-code -g -y --copy
 ```
 
-### 方式二：克隆仓库并一键接入七大 Harness
+### 方式二：免安装直接通过 `npx` 运行 CLI
+
+无需克隆或全局安装，直接一行命令体检任意工作区：
+
+```bash
+npx -y github:yizhiyanhua-ai/fireworks-branch-killer scan --root . --fast --no-size
+```
+
+*（发布到 npmjs 后同样支持 `npx -y @yizhiyanhua-ai/fireworks-branch-killer`。）*
+
+### 方式三：克隆仓库并一键接入七大 Harness
 
 ```bash
 git clone https://github.com/yizhiyanhua-ai/fireworks-branch-killer.git
