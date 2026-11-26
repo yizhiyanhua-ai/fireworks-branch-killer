@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 640" width="1120" height="640" data-generator="fireworks-tech-graph" data-schema-version="1" data-text-metrics="heuristic-v1" data-style-id="4" data-visual-theme="Notion Clean" data-diagram-type="architecture" data-motion-scene="" data-semantic-profile="generic" data-semantic-valid="true" data-quality-profile="showcase" data-max-bends-per-edge="2" data-max-total-bends="8" data-max-route-stretch="1.35" data-max-bridged-crossings="0" data-min-node-gap="40.0" data-min-container-gutter="20.0" data-min-label-clearance="4.0" data-min-segment-length="16.0">
+  <defs>
+    <marker id="arrowA" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowB" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowC" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowE" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrowF" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#9ca3af"/>
+    </marker>
+    <marker id="arrowG" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#9ca3af"/>
+    </marker>
+    <marker id="arrowH" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#d1d5db"/>
+    </marker>
+    <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', 'Microsoft JhengHei', 'SimHei', sans-serif; }
+    .title { font-size: 18px; font-weight: 700; fill: #111827; }
+    .subtitle { font-size: 13px; font-weight: 500; fill: #9ca3af; }
+    .section { font-size: 13px; font-weight: 700; fill: #6b7280; letter-spacing: 1.4px; }
+    .section-sub { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .node-title { font-weight: 700; fill: #111827; }
+    .node-sub { font-weight: 500; fill: #374151; }
+    .node-type { font-size: 11px; font-weight: 700; fill: #6b7280; letter-spacing: 0.08em; }
+    .arrow-label { font-size: 12px; font-weight: 600; fill: #6b7280; }
+    .legend { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .footnote { font-size: 12px; font-weight: 500; fill: #6b7280; }
+    .metric-label { font-size: 8.5px; font-weight: 700; fill: #6b7280; text-transform: uppercase; }
+    .metric-value { font-size: 9.5px; font-weight: 700; fill: #111827; }
+    </style>
+  </defs>
+  <rect data-graph-role="background" width="1120.0" height="640.0" fill="#ffffff"/>
+  <text x="48.0" y="48" text-anchor="start" class="title">7-Harness Integration &amp; Continuous Hygiene Lifecycle</text>
+  <text x="48.0" y="72" text-anchor="start" class="subtitle">Prevention at tool call time, closure at task end, and safe batch governance</text>
+  <line x1="48" y1="100" x2="1072.0" y2="100" stroke="#e5e7eb" stroke-width="1"/>
+  <g id="harnesses" data-graph-role="container" data-container-id="harnesses" data-semantic-role="boundary" data-graph-bounds="36,104,328,564">
+  <rect data-graph-role="container" x="36.0" y="104.0" width="292.0" height="460.0" rx="4.0" fill="none" stroke="#e5e7eb" stroke-width="1.4"/>
+  <text x="54.0" y="128.0" class="section">7 SUPPORTED AI HARNESSES</text>
+    <rect id="harnesses-header" data-graph-role="reserved" data-reserved-kind="container-header" x="44" y="110" width="199" height="30" fill="none" stroke="none"/>
+  </g>
+  <g id="hooks" data-graph-role="container" data-container-id="hooks" data-semantic-role="boundary" data-graph-bounds="374,104,746,564">
+  <rect data-graph-role="container" x="374.0" y="104.0" width="372.0" height="460.0" rx="4.0" fill="none" stroke="#e5e7eb" stroke-width="1.4"/>
+  <text x="392.0" y="128.0" class="section">PROACTIVE LIFECYCLE HOOKS</text>
+    <rect id="hooks-header" data-graph-role="reserved" data-reserved-kind="container-header" x="382" y="110" width="206.02" height="30" fill="none" stroke="none"/>
+  </g>
+  <g id="commands" data-graph-role="container" data-container-id="commands" data-semantic-role="boundary" data-graph-bounds="792,104,1084,564">
+  <rect data-graph-role="container" x="792.0" y="104.0" width="292.0" height="460.0" rx="4.0" fill="none" stroke="#e5e7eb" stroke-width="1.4"/>
+  <text x="810.0" y="128.0" class="section">FBK.PY GOVERNANCE SUITE</text>
+    <rect id="commands-header" data-graph-role="reserved" data-reserved-kind="container-header" x="800" y="110" width="190.94" height="30" fill="none" stroke="none"/>
+  </g>
+  <path id="a1" data-graph-role="edge" data-edge-id="a1" data-source="h1" data-target="k1" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 308,200 L 394,200" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a2" data-graph-role="edge" data-edge-id="a2" data-source="h2" data-target="k2" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 308,336 L 394,336" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a3" data-graph-role="edge" data-edge-id="a3" data-source="h3" data-target="k3" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 308,472 L 394,472" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a4" data-graph-role="edge" data-edge-id="a4" data-source="k1" data-target="c1" data-edge-kind="flow" data-topic-id="" data-flow="read" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 726,200 L 812,200" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a5" data-graph-role="edge" data-edge-id="a5" data-source="k2" data-target="c2" data-edge-kind="flow" data-topic-id="" data-flow="write" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 726,336 L 812,336" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a6" data-graph-role="edge" data-edge-id="a6" data-source="k3" data-target="c3" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 726,472 L 812,472" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <g id="node-h1" data-graph-role="node" data-node-id="h1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,154,308,246">
+  <rect x="56.0" y="154.0" width="252.0" height="92.0" rx="4.0" fill="#ffffff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="182.0" y="172.0" text-anchor="middle" class="node-type">JSON HOOKS + SKILLS</text>
+  <text data-text-role="title" data-full-text="AGY &amp; Claude Code" data-text-max-width="228.0" x="182.0" y="206.0" text-anchor="middle" class="node-title" font-size="18">AGY &amp; Claude Code</text>
+  <text data-text-role="subtitle" data-full-text="SessionStart + PreToolUse" data-text-max-width="228.0" x="182.0" y="228.0" text-anchor="middle" class="node-sub" font-size="12">SessionStart + PreToolUse</text>
+  </g>
+  <g id="node-h2" data-graph-role="node" data-node-id="h2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,290,308,382">
+  <rect x="56.0" y="290.0" width="252.0" height="92.0" rx="4.0" fill="#ffffff" stroke="#10b981" stroke-width="1.8"/>
+  <text x="182.0" y="308.0" text-anchor="middle" class="node-type">SHARED SKILL + HOOK</text>
+  <text data-text-role="title" data-full-text="Codex CLI" data-text-max-width="228.0" x="182.0" y="342.0" text-anchor="middle" class="node-title" font-size="18">Codex CLI</text>
+  <text data-text-role="subtitle" data-full-text="~/.codex/hooks.json + skills" data-text-max-width="228.0" x="182.0" y="364.0" text-anchor="middle" class="node-sub" font-size="12">~/.codex/hooks.json + skills</text>
+  </g>
+  <g id="node-h3" data-graph-role="node" data-node-id="h3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,426,308,518">
+  <rect x="56.0" y="426.0" width="252.0" height="92.0" rx="4.0" fill="#ffffff" stroke="#8b5cf6" stroke-width="1.8"/>
+  <text x="182.0" y="444.0" text-anchor="middle" class="node-type">AGENT SKILLS STANDARD</text>
+  <text data-text-role="title" data-full-text="DeepSeek / Amy / T3 / Orca" data-text-max-width="228.0" x="182.0" y="478.0" text-anchor="middle" class="node-title" font-size="15.34">DeepSeek / Amy / T3 / Orca</text>
+  <text data-text-role="subtitle" data-full-text=".agents/skills + env detection" data-text-max-width="228.0" x="182.0" y="500.0" text-anchor="middle" class="node-sub" font-size="12">.agents/skills + env detection</text>
+  </g>
+  <g id="node-k1" data-graph-role="node" data-node-id="k1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="394,154,726,246">
+  <rect x="394.0" y="154.0" width="332.0" height="92.0" rx="4.0" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="560.0" y="172.0" text-anchor="middle" class="node-type">SESSION START (&lt;1s)</text>
+  <text data-text-role="title" data-full-text="Threshold Hygiene Alert" data-text-max-width="308.0" x="560.0" y="206.0" text-anchor="middle" class="node-title" font-size="18">Threshold Hygiene Alert</text>
+  <text data-text-role="subtitle" data-full-text="6h per-harness cooldown" data-text-max-width="308.0" x="560.0" y="228.0" text-anchor="middle" class="node-sub" font-size="12">6h per-harness cooldown</text>
+  </g>
+  <g id="node-k2" data-graph-role="node" data-node-id="k2" data-semantic-role="hexagon" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="394,290,726,382">
+  <path d="M 416.0 290.0 L 704.0 290.0 L 726.0 336.0 L 704.0 382.0 L 416.0 382.0 L 394.0 336.0 Z" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.0"/>
+  <text x="560.0" y="308.0" text-anchor="middle" class="node-type">PRE TOOL USE GUARD</text>
+  <text data-text-role="title" data-full-text="Prevent Bloat Early" data-text-max-width="280.0" x="560.0" y="342.0" text-anchor="middle" class="node-title" font-size="18">Prevent Bloat Early</text>
+  <text data-text-role="subtitle" data-full-text="Local remote &amp; quota check" data-text-max-width="280.0" x="560.0" y="364.0" text-anchor="middle" class="node-sub" font-size="12">Local remote &amp; quota check</text>
+  </g>
+  <g id="node-k3" data-graph-role="node" data-node-id="k3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="394,426,726,518">
+  <rect x="394.0" y="426.0" width="332.0" height="92.0" rx="4.0" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
+  <text x="560.0" y="444.0" text-anchor="middle" class="node-type">TASK COMPLETION</text>
+  <text data-text-role="title" data-full-text="fbk close (Use &amp; Burn)" data-text-max-width="308.0" x="560.0" y="478.0" text-anchor="middle" class="node-title" font-size="18">fbk close (Use &amp; Burn)</text>
+  <text data-text-role="subtitle" data-full-text="Clean merged worktree post-PR" data-text-max-width="308.0" x="560.0" y="500.0" text-anchor="middle" class="node-sub" font-size="12">Clean merged worktree post-PR</text>
+  </g>
+  <g id="node-c1" data-graph-role="node" data-node-id="c1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="812,154,1064,246">
+  <rect x="812.0" y="154.0" width="252.0" height="92.0" rx="4.0" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.8"/>
+  <text x="938.0" y="172.0" text-anchor="middle" class="node-type">DAILY SWEEP</text>
+  <text data-text-role="title" data-full-text="scan / plan / clean / slim" data-text-max-width="228.0" x="938.0" y="206.0" text-anchor="middle" class="node-title" font-size="16.59">scan / plan / clean / slim</text>
+  <text data-text-role="subtitle" data-full-text="--harness --older-than --sort" data-text-max-width="228.0" x="938.0" y="228.0" text-anchor="middle" class="node-sub" font-size="12">--harness --older-than --sort</text>
+  </g>
+  <g id="node-c2" data-graph-role="node" data-node-id="c2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="812,290,1064,382">
+  <rect x="812.0" y="290.0" width="252.0" height="92.0" rx="4.0" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.8"/>
+  <text x="938.0" y="308.0" text-anchor="middle" class="node-type">BLOAT RECOVERY</text>
+  <text data-text-role="title" data-full-text="prune-remotes / cutover" data-text-max-width="228.0" x="938.0" y="342.0" text-anchor="middle" class="node-title" font-size="16.36">prune-remotes / cutover</text>
+  <text data-text-role="subtitle" data-full-text="repair-alternates / audit" data-text-max-width="228.0" x="938.0" y="364.0" text-anchor="middle" class="node-sub" font-size="12">repair-alternates / audit</text>
+  </g>
+  <g id="node-c3" data-graph-role="node" data-node-id="c3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="812,426,1064,518">
+  <rect x="812.0" y="426.0" width="252.0" height="92.0" rx="4.0" fill="#ffffff" stroke="#e5e7eb" stroke-width="1.8"/>
+  <text x="938.0" y="444.0" text-anchor="middle" class="node-type">SELF-CHECK &amp; ROLLBACK</text>
+  <text data-text-role="title" data-full-text="doctor / install / restore" data-text-max-width="228.0" x="938.0" y="478.0" text-anchor="middle" class="node-title" font-size="15.73">doctor / install / restore</text>
+  <text data-text-role="subtitle" data-full-text="Idempotent multi-harness sync" data-text-max-width="228.0" x="938.0" y="500.0" text-anchor="middle" class="node-sub" font-size="12">Idempotent multi-harness sync</text>
+  </g>
+  <g id="footer" data-graph-role="reserved" data-graph-bounds="40,592,551,608">
+  <text x="40.0" y="604.0" class="footnote">Style 4 · Notion Clean · One engine, seven harnesses, zero vendor lock-in</text>
+  </g>
+</svg>

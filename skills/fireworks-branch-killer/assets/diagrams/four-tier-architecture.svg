@@ -1,0 +1,146 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 700" width="1120" height="700" data-generator="fireworks-tech-graph" data-schema-version="1" data-text-metrics="heuristic-v1" data-style-id="2" data-visual-theme="Dark Terminal" data-diagram-type="architecture" data-motion-scene="" data-semantic-profile="generic" data-semantic-valid="true" data-quality-profile="showcase" data-max-bends-per-edge="2" data-max-total-bends="8" data-max-route-stretch="1.35" data-max-bridged-crossings="0" data-min-node-gap="40.0" data-min-container-gutter="20.0" data-min-label-clearance="4.0" data-min-segment-length="16.0">
+  <defs>
+    <marker id="arrowA" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7"/>
+    </marker>
+    <marker id="arrowB" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e"/>
+    </marker>
+    <marker id="arrowC" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrowE" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#fb7185"/>
+    </marker>
+    <marker id="arrowF" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrowG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#f97316"/>
+    </marker>
+    <marker id="arrowH" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8"/>
+    </marker>
+    <linearGradient id="terminalGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f0f1a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <filter id="glowBlue" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#3b82f6" flood-opacity="0.65"/>
+    </filter>
+    <filter id="glowPurple" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#a855f7" flood-opacity="0.72"/>
+    </filter>
+    <filter id="glowGreen" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#22c55e" flood-opacity="0.62"/>
+    </filter>
+    <filter id="glowOrange" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#f97316" flood-opacity="0.62"/>
+    </filter>
+    <style>
+    text { font-family: 'SF Mono', 'Fira Code', Menlo, 'Noto Sans CJK SC', 'Microsoft YaHei', 'SimHei', monospace; }
+    .title { font-size: 30px; font-weight: 700; fill: #e2e8f0; }
+    .subtitle { font-size: 14px; font-weight: 500; fill: #94a3b8; }
+    .section { font-size: 13px; font-weight: 700; fill: #38bdf8; letter-spacing: 1.4px; }
+    .section-sub { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    .node-title { font-weight: 700; fill: #e2e8f0; }
+    .node-sub { font-weight: 500; fill: #94a3b8; }
+    .node-type { font-size: 12px; font-weight: 700; fill: #94a3b8; letter-spacing: 0.08em; }
+    .arrow-label { font-size: 12px; font-weight: 600; fill: #cbd5e1; }
+    .legend { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    .footnote { font-size: 12px; font-weight: 500; fill: #94a3b8; }
+    .metric-label { font-size: 8.5px; font-weight: 700; fill: #94a3b8; text-transform: uppercase; }
+    .metric-value { font-size: 9.5px; font-weight: 700; fill: #e2e8f0; }
+    </style>
+  </defs>
+  <rect data-graph-role="background" width="1120.0" height="700.0" fill="url(#terminalGradient)"/>
+  <text x="560.0" y="56" text-anchor="middle" class="title">4-Tier Fail-Closed Safety Model &amp; Zero-Write Probing</text>
+  <text x="560.0" y="82" text-anchor="middle" class="subtitle">Every branch and worktree passes deterministic guards before touching disk</text>
+  <g id="waterfall" data-graph-role="container" data-container-id="waterfall" data-semantic-role="boundary" data-graph-bounds="36,104,346,624">
+  <rect data-graph-role="container" x="36.0" y="104.0" width="310.0" height="520.0" rx="16.0" fill="rgba(15,23,42,0.28)" stroke="#334155" stroke-width="1.4" stroke-dasharray="7 6"/>
+  <text x="54.0" y="128.0" class="section">ZERO-WRITE MERGE WATERFALL</text>
+    <rect id="waterfall-header" data-graph-role="reserved" data-reserved-kind="container-header" x="44" y="110" width="226.3" height="30" fill="none" stroke="none"/>
+  </g>
+  <g id="tiers" data-graph-role="container" data-container-id="tiers" data-semantic-role="boundary" data-graph-bounds="392,104,728,624">
+  <rect data-graph-role="container" x="392.0" y="104.0" width="336.0" height="520.0" rx="16.0" fill="rgba(15,23,42,0.28)" stroke="#334155" stroke-width="1.4" stroke-dasharray="7 6"/>
+  <text x="410.0" y="128.0" class="section">4-TIER CLASSIFICATION</text>
+    <rect id="tiers-header" data-graph-role="reserved" data-reserved-kind="container-header" x="400" y="110" width="171.96" height="30" fill="none" stroke="none"/>
+  </g>
+  <g id="vault" data-graph-role="container" data-container-id="vault" data-semantic-role="boundary" data-graph-bounds="774,104,1084,624">
+  <rect data-graph-role="container" x="774.0" y="104.0" width="310.0" height="520.0" rx="16.0" fill="rgba(15,23,42,0.28)" stroke="#334155" stroke-width="1.4" stroke-dasharray="7 6"/>
+  <text x="792.0" y="128.0" class="section">VAULT &amp; AUDIT GUARANTEES</text>
+    <rect id="vault-header" data-graph-role="reserved" data-reserved-kind="container-header" x="782" y="110" width="202.12" height="30" fill="none" stroke="none"/>
+  </g>
+  <path id="a1" data-graph-role="edge" data-edge-id="a1" data-source="w1" data-target="w2" data-edge-kind="flow" data-topic-id="" data-flow="read" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 191,232 L 191,276" fill="none" stroke="#38bdf8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowC)"/>
+  <path id="a2" data-graph-role="edge" data-edge-id="a2" data-source="w2" data-target="w3" data-edge-kind="flow" data-topic-id="" data-flow="read" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 191,352 L 191,396" fill="none" stroke="#38bdf8" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowC)"/>
+  <path id="a3" data-graph-role="edge" data-edge-id="a3" data-source="w1" data-target="t0" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 326,194 L 412,194" fill="none" stroke="#a855f7" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a4" data-graph-role="edge" data-edge-id="a4" data-source="t0" data-target="v1" data-edge-kind="flow" data-topic-id="" data-flow="write" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 708,194 L 794,194" fill="none" stroke="#22c55e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowB)"/>
+  <path id="a5" data-graph-role="edge" data-edge-id="a5" data-source="t2" data-target="v3" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 708,434 L 794,434" fill="none" stroke="#a855f7" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a6" data-graph-role="edge" data-edge-id="a6" data-source="v1" data-target="v2" data-edge-kind="flow" data-topic-id="" data-flow="write" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 929,232 L 929,276" fill="none" stroke="#22c55e" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowB)"/>
+  <g id="node-w1" data-graph-role="node" data-node-id="w1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,156,326,232">
+  <rect x="56.0" y="156.0" width="270.0" height="76.0" rx="10.0" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8"/>
+  <text x="191.0" y="174.0" text-anchor="middle" class="node-type">STEP 1 · ANCESTOR</text>
+  <text data-text-role="title" data-full-text="git branch --merged" data-text-max-width="246.0" x="191.0" y="200.0" text-anchor="middle" class="node-title" font-size="18">git branch --merged</text>
+  <text data-text-role="subtitle" data-full-text="Base + --extra-base anchors" data-text-max-width="246.0" x="191.0" y="222.0" text-anchor="middle" class="node-sub" font-size="12">Base + --extra-base anchors</text>
+  </g>
+  <g id="node-w2" data-graph-role="node" data-node-id="w2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,276,326,352">
+  <rect x="56.0" y="276.0" width="270.0" height="76.0" rx="10.0" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8"/>
+  <text x="191.0" y="294.0" text-anchor="middle" class="node-type">STEP 2 · REBASE</text>
+  <text data-text-role="title" data-full-text="git cherry &lt;base&gt;" data-text-max-width="246.0" x="191.0" y="320.0" text-anchor="middle" class="node-title" font-size="18">git cherry &lt;base&gt;</text>
+  <text data-text-role="subtitle" data-full-text="Detects cherry-pick &amp; rebase" data-text-max-width="246.0" x="191.0" y="342.0" text-anchor="middle" class="node-sub" font-size="12">Detects cherry-pick &amp; rebase</text>
+  </g>
+  <g id="node-w3" data-graph-role="node" data-node-id="w3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,396,326,472">
+  <rect x="56.0" y="396.0" width="270.0" height="76.0" rx="10.0" fill="#0f172a" stroke="#a78bfa" stroke-width="1.8"/>
+  <text x="191.0" y="414.0" text-anchor="middle" class="node-type">STEP 3 · SQUASH</text>
+  <text data-text-role="title" data-full-text="Isolated GIT_OBJECT_DIR" data-text-max-width="246.0" x="191.0" y="440.0" text-anchor="middle" class="node-title" font-size="18">Isolated GIT_OBJECT_DIR</text>
+  <text data-text-role="subtitle" data-full-text="Virtual commit-tree; 0 writes" data-text-max-width="246.0" x="191.0" y="462.0" text-anchor="middle" class="node-sub" font-size="12">Virtual commit-tree; 0 writes</text>
+  </g>
+  <g id="node-t0" data-graph-role="node" data-node-id="t0" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="412,156,708,232">
+  <rect x="412.0" y="156.0" width="296.0" height="76.0" rx="10.0" fill="#052e16" stroke="#22c55e" stroke-width="1.8"/>
+  <text x="560.0" y="174.0" text-anchor="middle" class="node-type">TIER 0 · SAFE AUTO</text>
+  <text data-text-role="title" data-full-text="Merged / Broken / Ancestor" data-text-max-width="272.0" x="560.0" y="200.0" text-anchor="middle" class="node-title" font-size="17.44">Merged / Broken / Ancestor</text>
+  <text data-text-role="subtitle" data-full-text="Clean + past 24h grace" data-text-max-width="272.0" x="560.0" y="222.0" text-anchor="middle" class="node-sub" font-size="12">Clean + past 24h grace</text>
+  </g>
+  <g id="node-t1" data-graph-role="node" data-node-id="t1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="412,276,708,352">
+  <rect x="412.0" y="276.0" width="296.0" height="76.0" rx="10.0" fill="#082f49" stroke="#06b6d4" stroke-width="1.8"/>
+  <text x="560.0" y="294.0" text-anchor="middle" class="node-type">TIER 1 · SLIMMABLE</text>
+  <text data-text-role="title" data-full-text="Untracked Build Caches" data-text-max-width="272.0" x="560.0" y="320.0" text-anchor="middle" class="node-title" font-size="18">Untracked Build Caches</text>
+  <text data-text-role="subtitle" data-full-text="node_modules; ls-files check" data-text-max-width="272.0" x="560.0" y="342.0" text-anchor="middle" class="node-sub" font-size="12">node_modules; ls-files check</text>
+  </g>
+  <g id="node-t2" data-graph-role="node" data-node-id="t2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="412,396,708,472">
+  <rect x="412.0" y="396.0" width="296.0" height="76.0" rx="10.0" fill="#451a03" stroke="#f59e0b" stroke-width="1.8"/>
+  <text x="560.0" y="414.0" text-anchor="middle" class="node-type">TIER 2 · REVIEW NEEDED</text>
+  <text data-text-role="title" data-full-text="Unmerged / Dirty / gate-*" data-text-max-width="272.0" x="560.0" y="440.0" text-anchor="middle" class="node-title" font-size="18">Unmerged / Dirty / gate-*</text>
+  <text data-text-role="subtitle" data-full-text="Requires --allow-review" data-text-max-width="272.0" x="560.0" y="462.0" text-anchor="middle" class="node-sub" font-size="12">Requires --allow-review</text>
+  </g>
+  <g id="node-t3" data-graph-role="node" data-node-id="t3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="412,516,708,592">
+  <rect x="412.0" y="516.0" width="296.0" height="76.0" rx="10.0" fill="#450a0a" stroke="#ef4444" stroke-width="1.8"/>
+  <text x="560.0" y="534.0" text-anchor="middle" class="node-type">TIER 3 · FAIL-CLOSED</text>
+  <text data-text-role="title" data-full-text="Protected / Active / .delivery" data-text-max-width="272.0" x="560.0" y="560.0" text-anchor="middle" class="node-title" font-size="16.26">Protected / Active / .delivery</text>
+  <text data-text-role="subtitle" data-full-text="lsof cwd / lock / .fbk-keep" data-text-max-width="272.0" x="560.0" y="582.0" text-anchor="middle" class="node-sub" font-size="12">lsof cwd / lock / .fbk-keep</text>
+  </g>
+  <g id="node-v1" data-graph-role="node" data-node-id="v1" data-semantic-role="cylinder" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="794,156,1064,232">
+  <ellipse cx="929.0" cy="165.5" rx="135.0" ry="9.5" fill="#1e1b4b" stroke="#818cf8" stroke-width="2.2"/>
+  <rect x="794.0" y="165.5" width="270.0" height="57.0" fill="#1e1b4b" stroke="#818cf8" stroke-width="2.2"/>
+  <ellipse cx="929.0" cy="222.5" rx="135.0" ry="9.5" fill="#1e1b4b" stroke="#818cf8" stroke-width="2.2"/>
+  <ellipse cx="929.0" cy="184.88" rx="135.0" ry="9.5" fill="none" stroke="#818cf8" stroke-opacity="0.45" stroke-width="1.2"/>
+  <ellipse cx="929.0" cy="201.6" rx="135.0" ry="9.5" fill="none" stroke="#818cf8" stroke-opacity="0.25" stroke-width="1.2"/>
+  <text data-text-role="title" data-full-text="Temp-Ref Bundles" data-text-max-width="246.0" x="929.0" y="188.0" text-anchor="middle" class="node-title" font-size="18">Temp-Ref Bundles</text>
+  <text data-text-role="subtitle" data-full-text="+ Untracked tar.gz + patch" data-text-max-width="246.0" x="929.0" y="212.0" text-anchor="middle" class="node-sub" font-size="12">+ Untracked tar.gz + patch</text>
+  </g>
+  <g id="node-v2" data-graph-role="node" data-node-id="v2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="794,276,1064,352">
+  <rect x="794.0" y="276.0" width="270.0" height="76.0" rx="10.0" fill="#0f172a" stroke="#38bdf8" stroke-width="1.8"/>
+  <text x="929.0" y="294.0" text-anchor="middle" class="node-type">AUDIT LEDGER</text>
+  <text data-text-role="title" data-full-text="receipts.jsonl" data-text-max-width="246.0" x="929.0" y="320.0" text-anchor="middle" class="node-title" font-size="18">receipts.jsonl</text>
+  <text data-text-role="subtitle" data-full-text="fbk restore &lt;id&gt; --apply" data-text-max-width="246.0" x="929.0" y="342.0" text-anchor="middle" class="node-sub" font-size="12">fbk restore &lt;id&gt; --apply</text>
+  </g>
+  <g id="node-v3" data-graph-role="node" data-node-id="v3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="794,396,1064,472">
+  <rect x="794.0" y="396.0" width="270.0" height="76.0" rx="10.0" fill="#0f172a" stroke="#22c55e" stroke-width="1.8"/>
+  <text x="929.0" y="414.0" text-anchor="middle" class="node-type">PROXY FSCK GATE</text>
+  <text data-text-role="title" data-full-text="repair-alternates" data-text-max-width="246.0" x="929.0" y="440.0" text-anchor="middle" class="node-title" font-size="18">repair-alternates</text>
+  <text data-text-role="subtitle" data-full-text="Refuses if objects missing" data-text-max-width="246.0" x="929.0" y="462.0" text-anchor="middle" class="node-sub" font-size="12">Refuses if objects missing</text>
+  </g>
+  <g id="footer" data-graph-role="reserved" data-graph-bounds="40,652,551,668">
+  <text x="40.0" y="664.0" class="footnote">Style 2 · Dark Terminal · --no-optional-locks on all read-only operations</text>
+  </g>
+</svg>

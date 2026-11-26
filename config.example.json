@@ -1,0 +1,109 @@
+{
+  "grace_period_hours": 24,
+  "protected_branch_patterns": [
+    "^(main|master|develop|dev)$",
+    "^release/.*",
+    "^prod.*"
+  ],
+  "protected_path_patterns": [],
+  "vault_retention_days": 7,
+  "slim_idle_days": 7,
+  "slim_cache_dirs": [
+    "node_modules",
+    ".next",
+    ".nuxt",
+    "target",
+    "dist",
+    "build",
+    ".turbo",
+    ".parcel-cache",
+    ".venv",
+    "__pycache__",
+    ".pytest_cache"
+  ],
+  "max_squash_check_per_repo": 100,
+  "scan_workers": 6,
+  "discover_max_depth": 3,
+  "delivery_guard_enabled": true,
+  "cutover_worktree_threshold": 50,
+  "cutover_remote_refs_threshold": 10000,
+  "repo_worktree_quota": 10,
+  "ephemeral_dir_patterns": [
+    "^gate-[0-9a-f]{8,}-(\\d+)$"
+  ],
+  "extra_bases": {},
+  "protected_shas": [],
+  "pre_tool_guard": {
+    "enabled": true,
+    "local_remote_add_action": "ask",
+    "worktree_quota_action": "ask"
+  },
+  "remote_audit_stale_days": 30,
+  "remote_audit_recent_days": 14,
+  "additional_worktree_roots": [
+    "~/.codex/worktrees",
+    "~/.t3/worktrees",
+    "~/.claude/worktrees",
+    "~/.amy/worktrees",
+    "~/.orca/worktrees"
+  ],
+  "nested_worktree_dirs": [
+    ".worktrees",
+    "worktrees",
+    ".claude/worktrees",
+    ".codex/worktrees",
+    ".t3/worktrees",
+    ".amy/worktrees",
+    ".orca/worktrees"
+  ],
+  "harness_patterns": {
+    "claude-code": [
+      "\\.claude/worktrees",
+      "(?:^|[/_-])claude[-_]",
+      "(?:^|[/_-])calude[-_]",
+      "pro-claude"
+    ],
+    "codex": [
+      "\\.codex/worktrees",
+      "(?:^|[/_-])codex",
+      "pro-codex"
+    ],
+    "agy": [
+      "(?:^|[/_-])agy[-_]",
+      "antigravity",
+      "\\.gemini",
+      "(?:^|[/_-])ge\\d+[-_]",
+      "pro-worker-ge\\d+"
+    ],
+    "deepseek-harness": [
+      "(?:^|[/_-])wt-ds",
+      "(?:^|[/_-])ds\\d*[-_]",
+      "deepseek",
+      "\\.scratch-ds"
+    ],
+    "amy": [
+      "\\.amy/worktrees",
+      "(?:^|[/_-])amy[-_]",
+      "/amy/"
+    ],
+    "t3-code": [
+      "\\.t3/worktrees",
+      "(?:^|[/_-])t3[-_]",
+      "t3code"
+    ],
+    "orca": [
+      "\\.orca/worktrees",
+      "(?:^|[/_-])orca[-_]",
+      "/orca/"
+    ],
+    "gate-verifier": [
+      "(?:^|/)gate-[0-9a-f]{8,}-\\d+"
+    ]
+  },
+  "hook_cooldown_hours": 6,
+  "hook_thresholds": {
+    "worktree_count": 20,
+    "branch_count_per_repo": 100,
+    "broken_worktree_count": 1
+  }
+}

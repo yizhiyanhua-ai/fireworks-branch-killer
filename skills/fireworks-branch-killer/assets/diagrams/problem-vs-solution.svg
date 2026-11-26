@@ -1,0 +1,145 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1120 700" width="1120" height="700" data-generator="fireworks-tech-graph" data-schema-version="1" data-text-metrics="heuristic-v1" data-style-id="6" data-visual-theme="Claude Official" data-diagram-type="architecture" data-motion-scene="" data-semantic-profile="generic" data-semantic-valid="true" data-quality-profile="showcase" data-max-bends-per-edge="2" data-max-total-bends="8" data-max-route-stretch="1.35" data-max-bridged-crossings="0" data-min-node-gap="40.0" data-min-container-gutter="20.0" data-min-label-clearance="4.0" data-min-segment-length="16.0">
+  <defs>
+    <marker id="arrowA" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#d97757"/>
+    </marker>
+    <marker id="arrowB" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7b8b5c"/>
+    </marker>
+    <marker id="arrowC" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8c6f5a"/>
+    </marker>
+    <marker id="arrowE" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#b45309"/>
+    </marker>
+    <marker id="arrowF" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#9a6fb0"/>
+    </marker>
+    <marker id="arrowG" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#7c5c96"/>
+    </marker>
+    <marker id="arrowH" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#8f8a80"/>
+    </marker>
+    <style>
+    text { font-family: 'Helvetica Neue', Helvetica, Arial, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', 'Microsoft JhengHei', 'SimHei', sans-serif; }
+    .title { font-size: 24px; font-weight: 700; fill: #141413; }
+    .subtitle { font-size: 13px; font-weight: 500; fill: #8f8a80; }
+    .section { font-size: 13px; font-weight: 700; fill: #8b7355; letter-spacing: 1.4px; }
+    .section-sub { font-size: 12px; font-weight: 500; fill: #75695d; }
+    .node-title { font-weight: 700; fill: #141413; }
+    .node-sub { font-weight: 500; fill: #6b6257; }
+    .node-type { font-size: 11px; font-weight: 700; fill: #75695d; letter-spacing: 0.08em; }
+    .arrow-label { font-size: 12px; font-weight: 600; fill: #6b6257; }
+    .legend { font-size: 12px; font-weight: 500; fill: #6b6257; }
+    .footnote { font-size: 12px; font-weight: 500; fill: #75695d; }
+    .metric-label { font-size: 8.5px; font-weight: 700; fill: #75695d; text-transform: uppercase; }
+    .metric-value { font-size: 9.5px; font-weight: 700; fill: #141413; }
+    </style>
+  </defs>
+  <rect data-graph-role="background" width="1120.0" height="700.0" fill="#f8f6f3"/>
+  <text x="48.0" y="48" text-anchor="start" class="title">Why AI Coding Workspaces Explode — And How fbk Solves It</text>
+  <text x="48.0" y="72" text-anchor="start" class="subtitle">From parallel multi-agent worktree sprawl to deterministic, reversible hygiene</text>
+  <line x1="48" y1="100" x2="1072.0" y2="100" stroke="#ded8cf" stroke-width="1"/>
+  <g id="chaos" data-graph-role="container" data-container-id="chaos" data-semantic-role="boundary" data-graph-bounds="36,104,356,624">
+  <rect data-graph-role="container" x="36.0" y="104.0" width="320.0" height="520.0" rx="16.0" fill="none" stroke="#ded8cf" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="54.0" y="128.0" class="section">MULTI-AGENT SPRAWL (PAIN POINTS)</text>
+    <rect id="chaos-header" data-graph-role="reserved" data-reserved-kind="container-header" x="44" y="110" width="258.8" height="30" fill="none" stroke="none"/>
+  </g>
+  <g id="engine" data-graph-role="container" data-container-id="engine" data-semantic-role="boundary" data-graph-bounds="400,104,720,624">
+  <rect data-graph-role="container" x="400.0" y="104.0" width="320.0" height="520.0" rx="16.0" fill="none" stroke="#ded8cf" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="418.0" y="128.0" class="section">FBK DETERMINISTIC ENGINE</text>
+    <rect id="engine-header" data-graph-role="reserved" data-reserved-kind="container-header" x="408" y="110" width="194.84" height="30" fill="none" stroke="none"/>
+  </g>
+  <g id="outcome" data-graph-role="container" data-container-id="outcome" data-semantic-role="boundary" data-graph-bounds="764,104,1084,624">
+  <rect data-graph-role="container" x="764.0" y="104.0" width="320.0" height="520.0" rx="16.0" fill="none" stroke="#ded8cf" stroke-width="1.4" stroke-dasharray="5 4"/>
+  <text x="782.0" y="128.0" class="section">CLEAN &amp; REVERSIBLE WORKSPACE</text>
+    <rect id="outcome-header" data-graph-role="reserved" data-reserved-kind="container-header" x="772" y="110" width="235.4" height="30" fill="none" stroke="none"/>
+  </g>
+  <path id="a1" data-graph-role="edge" data-edge-id="a1" data-source="p1" data-target="e1" data-edge-kind="flow" data-topic-id="" data-flow="data" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 336,192 L 420,192" fill="none" stroke="#b45309" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowE)"/>
+  <path id="a2" data-graph-role="edge" data-edge-id="a2" data-source="p2" data-target="e2" data-edge-kind="flow" data-topic-id="" data-flow="data" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 336,312 L 420,312" fill="none" stroke="#b45309" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowE)"/>
+  <path id="a3" data-graph-role="edge" data-edge-id="a3" data-source="p3" data-target="e3" data-edge-kind="flow" data-topic-id="" data-flow="data" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 336,432 L 420,432" fill="none" stroke="#b45309" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowE)"/>
+  <path id="a4" data-graph-role="edge" data-edge-id="a4" data-source="p4" data-target="e4" data-edge-kind="flow" data-topic-id="" data-flow="data" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 336,552 L 420,552" fill="none" stroke="#b45309" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowE)"/>
+  <path id="a5" data-graph-role="edge" data-edge-id="a5" data-source="e1" data-target="o1" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 700,192 L 784,192" fill="none" stroke="#d97757" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a6" data-graph-role="edge" data-edge-id="a6" data-source="e2" data-target="o2" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 700,312 L 784,312" fill="none" stroke="#d97757" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <path id="a7" data-graph-role="edge" data-edge-id="a7" data-source="e3" data-target="o3" data-edge-kind="flow" data-topic-id="" data-flow="write" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 700,432 L 784,432" fill="none" stroke="#7b8b5c" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowB)"/>
+  <path id="a8" data-graph-role="edge" data-edge-id="a8" data-source="e4" data-target="o4" data-edge-kind="flow" data-topic-id="" data-flow="control" data-motion-role="" data-motion-stage="" data-motion-order="" data-protocol="" data-via="" data-critical-path-id="" data-critical-hop="" data-critical-hops="" data-critical="false" data-bends="0" data-route-stretch="1.0" data-bridges="" d="M 700,552 L 784,552" fill="none" stroke="#d97757" stroke-width="2.0" stroke-linecap="round" stroke-linejoin="round" marker-end="url(#arrowA)"/>
+  <g id="node-p1" data-graph-role="node" data-node-id="p1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,154,336,230">
+  <rect x="56.0" y="154.0" width="280.0" height="76.0" rx="10.0" fill="#fff7ed" stroke="#fb923c" stroke-width="1.8"/>
+  <text x="196.0" y="172.0" text-anchor="middle" class="node-type">WORKTREE EXPLOSION</text>
+  <text data-text-role="title" data-full-text="100s of Linked Worktrees" data-text-max-width="256.0" x="196.0" y="198.0" text-anchor="middle" class="node-title" font-size="17.9">100s of Linked Worktrees</text>
+  <text data-text-role="subtitle" data-full-text="Duplicate node_modules / .next" data-text-max-width="256.0" x="196.0" y="220.0" text-anchor="middle" class="node-sub" font-size="12">Duplicate node_modules / .next</text>
+  </g>
+  <g id="node-p2" data-graph-role="node" data-node-id="p2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,274,336,350">
+  <rect x="56.0" y="274.0" width="280.0" height="76.0" rx="10.0" fill="#fff7ed" stroke="#fb923c" stroke-width="1.8"/>
+  <text x="196.0" y="292.0" text-anchor="middle" class="node-type">MERGE BLIND SPOTS</text>
+  <text data-text-role="title" data-full-text="Squash &amp; Rebase Ghosts" data-text-max-width="256.0" x="196.0" y="318.0" text-anchor="middle" class="node-title" font-size="18">Squash &amp; Rebase Ghosts</text>
+  <text data-text-role="subtitle" data-full-text="git branch --merged misses PRs" data-text-max-width="256.0" x="196.0" y="340.0" text-anchor="middle" class="node-sub" font-size="12">git branch --merged misses PRs</text>
+  </g>
+  <g id="node-p3" data-graph-role="node" data-node-id="p3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,394,336,470">
+  <rect x="56.0" y="394.0" width="280.0" height="76.0" rx="10.0" fill="#fef2f2" stroke="#f87171" stroke-width="1.8"/>
+  <text x="196.0" y="412.0" text-anchor="middle" class="node-type">REMOTE AVALANCHE</text>
+  <text data-text-role="title" data-full-text="100k+ Local Agent Refs" data-text-max-width="256.0" x="196.0" y="438.0" text-anchor="middle" class="node-title" font-size="18">100k+ Local Agent Refs</text>
+  <text data-text-role="subtitle" data-full-text="Chained tmp clones &amp; alternates" data-text-max-width="256.0" x="196.0" y="460.0" text-anchor="middle" class="node-sub" font-size="12">Chained tmp clones &amp; alternates</text>
+  </g>
+  <g id="node-p4" data-graph-role="node" data-node-id="p4" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="56,514,336,590">
+  <rect x="56.0" y="514.0" width="280.0" height="76.0" rx="10.0" fill="#fef2f2" stroke="#ef4444" stroke-width="1.8"/>
+  <text x="196.0" y="532.0" text-anchor="middle" class="node-type">HIGH RISK</text>
+  <text data-text-role="title" data-full-text="Ad-hoc rm -rf / branch -D" data-text-max-width="256.0" x="196.0" y="558.0" text-anchor="middle" class="node-title" font-size="17.68">Ad-hoc rm -rf / branch -D</text>
+  <text data-text-role="subtitle" data-full-text="Kills live agents or WIP" data-text-max-width="256.0" x="196.0" y="580.0" text-anchor="middle" class="node-sub" font-size="12">Kills live agents or WIP</text>
+  </g>
+  <g id="node-e1" data-graph-role="node" data-node-id="e1" data-semantic-role="hexagon" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="420,154,700,230">
+  <path d="M 442.0 154.0 L 678.0 154.0 L 700.0 192.0 L 678.0 230.0 L 442.0 230.0 L 420.0 192.0 Z" fill="#ffffff" stroke="#d97757" stroke-width="1.8"/>
+  <text x="560.0" y="172.0" text-anchor="middle" class="node-type">ACTIVE GUARD</text>
+  <text data-text-role="title" data-full-text="4-Tier Fail-Closed Gate" data-text-max-width="228.0" x="560.0" y="198.0" text-anchor="middle" class="node-title" font-size="17.8">4-Tier Fail-Closed Gate</text>
+  <text data-text-role="subtitle" data-full-text="lsof + lock + grace + .delivery" data-text-max-width="228.0" x="560.0" y="220.0" text-anchor="middle" class="node-sub" font-size="12">lsof + lock + grace + .delivery</text>
+  </g>
+  <g id="node-e2" data-graph-role="node" data-node-id="e2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="420,274,700,350">
+  <rect x="420.0" y="274.0" width="280.0" height="76.0" rx="10.0" fill="#ffffff" stroke="#d97757" stroke-width="1.8"/>
+  <text x="560.0" y="292.0" text-anchor="middle" class="node-type">ZERO-WRITE PROBE</text>
+  <text data-text-role="title" data-full-text="3-Step Merge Waterfall" data-text-max-width="256.0" x="560.0" y="318.0" text-anchor="middle" class="node-title" font-size="18">3-Step Merge Waterfall</text>
+  <text data-text-role="subtitle" data-full-text="--merged -&gt; cherry -&gt; tmp squash" data-text-max-width="256.0" x="560.0" y="340.0" text-anchor="middle" class="node-sub" font-size="12">--merged -&gt; cherry -&gt; tmp squash</text>
+  </g>
+  <g id="node-e3" data-graph-role="node" data-node-id="e3" data-semantic-role="cylinder" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="420,394,700,470">
+  <ellipse cx="560.0" cy="403.5" rx="140.0" ry="9.5" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.2"/>
+  <rect x="420.0" y="403.5" width="280.0" height="57.0" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.2"/>
+  <ellipse cx="560.0" cy="460.5" rx="140.0" ry="9.5" fill="#fffbeb" stroke="#f59e0b" stroke-width="2.2"/>
+  <ellipse cx="560.0" cy="422.88" rx="140.0" ry="9.5" fill="none" stroke="#f59e0b" stroke-opacity="0.45" stroke-width="1.2"/>
+  <ellipse cx="560.0" cy="439.6" rx="140.0" ry="9.5" fill="none" stroke="#f59e0b" stroke-opacity="0.25" stroke-width="1.2"/>
+  <text data-text-role="title" data-full-text="Bundle + Untracked Tar" data-text-max-width="256.0" x="560.0" y="426.0" text-anchor="middle" class="node-title" font-size="18">Bundle + Untracked Tar</text>
+  <text data-text-role="subtitle" data-full-text="Append-only JSONL receipts" data-text-max-width="256.0" x="560.0" y="450.0" text-anchor="middle" class="node-sub" font-size="12">Append-only JSONL receipts</text>
+  </g>
+  <g id="node-e4" data-graph-role="node" data-node-id="e4" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="420,514,700,590">
+  <rect x="420.0" y="514.0" width="280.0" height="76.0" rx="10.0" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.8"/>
+  <text x="560.0" y="532.0" text-anchor="middle" class="node-type">PREVENT RECURRENCE</text>
+  <text data-text-role="title" data-full-text="PreToolUse Guard" data-text-max-width="256.0" x="560.0" y="558.0" text-anchor="middle" class="node-title" font-size="18">PreToolUse Guard</text>
+  <text data-text-role="subtitle" data-full-text="Blocks /tmp remotes &amp; bloat" data-text-max-width="256.0" x="560.0" y="580.0" text-anchor="middle" class="node-sub" font-size="12">Blocks /tmp remotes &amp; bloat</text>
+  </g>
+  <g id="node-o1" data-graph-role="node" data-node-id="o1" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="784,154,1064,230">
+  <rect x="784.0" y="154.0" width="280.0" height="76.0" rx="10.0" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
+  <text x="924.0" y="172.0" text-anchor="middle" class="node-type">TIER 0 AUTO-CLEAN</text>
+  <text data-text-role="title" data-full-text="Safe Pruning + fbk close" data-text-max-width="256.0" x="924.0" y="198.0" text-anchor="middle" class="node-title" font-size="18">Safe Pruning + fbk close</text>
+  <text data-text-role="subtitle" data-full-text="Merged &amp; broken worktrees gone" data-text-max-width="256.0" x="924.0" y="220.0" text-anchor="middle" class="node-sub" font-size="12">Merged &amp; broken worktrees gone</text>
+  </g>
+  <g id="node-o2" data-graph-role="node" data-node-id="o2" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="784,274,1064,350">
+  <rect x="784.0" y="274.0" width="280.0" height="76.0" rx="10.0" fill="#ecfdf5" stroke="#10b981" stroke-width="1.8"/>
+  <text x="924.0" y="292.0" text-anchor="middle" class="node-type">TIER 1 DISK SLIMMING</text>
+  <text data-text-role="title" data-full-text="Reclaim GBs Safely" data-text-max-width="256.0" x="924.0" y="318.0" text-anchor="middle" class="node-title" font-size="18">Reclaim GBs Safely</text>
+  <text data-text-role="subtitle" data-full-text="Untracked caches only" data-text-max-width="256.0" x="924.0" y="340.0" text-anchor="middle" class="node-sub" font-size="12">Untracked caches only</text>
+  </g>
+  <g id="node-o3" data-graph-role="node" data-node-id="o3" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="784,394,1064,470">
+  <rect x="784.0" y="394.0" width="280.0" height="76.0" rx="10.0" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="924.0" y="412.0" text-anchor="middle" class="node-type">CUTOVER &amp; REMOTES</text>
+  <text data-text-role="title" data-full-text="Unpushed Ledger + Bundle" data-text-max-width="256.0" x="924.0" y="438.0" text-anchor="middle" class="node-title" font-size="18">Unpushed Ledger + Bundle</text>
+  <text data-text-role="subtitle" data-full-text="Offline restore &amp; proxy fsck" data-text-max-width="256.0" x="924.0" y="460.0" text-anchor="middle" class="node-sub" font-size="12">Offline restore &amp; proxy fsck</text>
+  </g>
+  <g id="node-o4" data-graph-role="node" data-node-id="o4" data-semantic-role="rect" data-motion-role="" data-motion-stage="" data-motion-order="" data-parent="" data-deployment-id="" data-topic-id="" data-span-id="" data-station-order="" data-status="" data-start-ms="" data-duration-ms="" data-parent-span="" data-graph-bounds="784,514,1064,590">
+  <rect x="784.0" y="514.0" width="280.0" height="76.0" rx="10.0" fill="#eff6ff" stroke="#3b82f6" stroke-width="1.8"/>
+  <text x="924.0" y="532.0" text-anchor="middle" class="node-type">CONTINUOUS HYGIENE</text>
+  <text data-text-role="title" data-full-text="7-Harness Integration" data-text-max-width="256.0" x="924.0" y="558.0" text-anchor="middle" class="node-title" font-size="18">7-Harness Integration</text>
+  <text data-text-role="subtitle" data-full-text="AGY, Claude, Codex, Orca..." data-text-max-width="256.0" x="924.0" y="580.0" text-anchor="middle" class="node-sub" font-size="12">AGY, Claude, Codex, Orca...</text>
+  </g>
+  <g id="footer" data-graph-role="reserved" data-graph-bounds="40,652,572,668">
+  <text x="40.0" y="664.0" class="footnote">fireworks-branch-killer · Dry-run by default · Zero third-party dependencies</text>
+  </g>
+</svg>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Fireworks Branch Killer"
+  short_description: "Fail-closed Git worktree and branch hygiene across AI coding harnesses"
+  default_prompt: "Use $fireworks-branch-killer to audit exploded Git worktrees and feature branches in dry-run mode first, protect active work and unpushed commits, and safely clean, slim, close, or archive them with reversible Recovery Vault bundles."

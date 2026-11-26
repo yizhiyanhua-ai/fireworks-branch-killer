@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "mode": "architecture",
+  "template_type": "architecture",
+  "style": 4,
+  "quality_profile": "showcase",
+  "width": 1120,
+  "height": 640,
+  "title": "7-Harness Integration & Continuous Hygiene Lifecycle",
+  "subtitle": "Prevention at tool call time, closure at task end, and safe batch governance",
+  "containers": [
+    { "id": "harnesses", "x": 36, "y": 104, "width": 292, "height": 460, "label": "7 Supported AI Harnesses" },
+    { "id": "hooks", "x": 374, "y": 104, "width": 372, "height": 460, "label": "Proactive Lifecycle Hooks" },
+    { "id": "commands", "x": 792, "y": 104, "width": 292, "height": 460, "label": "fbk.py Governance Suite" }
+  ],
+  "nodes": [
+    {
+      "id": "h1", "kind": "rect", "x": 56, "y": 154, "width": 252, "height": 92,
+      "type_label": "JSON HOOKS + SKILLS", "label": "AGY & Claude Code",
+      "sublabel": "SessionStart + PreToolUse",
+      "fill": "#ffffff", "stroke": "#3b82f6", "flat": true
+    },
+    {
+      "id": "h2", "kind": "rect", "x": 56, "y": 290, "width": 252, "height": 92,
+      "type_label": "SHARED SKILL + HOOK", "label": "Codex CLI",
+      "sublabel": "~/.codex/hooks.json + skills",
+      "fill": "#ffffff", "stroke": "#10b981", "flat": true
+    },
+    {
+      "id": "h3", "kind": "rect", "x": 56, "y": 426, "width": 252, "height": 92,
+      "type_label": "AGENT SKILLS STANDARD", "label": "DeepSeek / Amy / T3 / Orca",
+      "sublabel": ".agents/skills + env detection",
+      "fill": "#ffffff", "stroke": "#8b5cf6", "flat": true
+    },
+    {
+      "id": "k1", "kind": "rect", "x": 394, "y": 154, "width": 332, "height": 92,
+      "type_label": "SESSION START (<1s)", "label": "Threshold Hygiene Alert",
+      "sublabel": "6h per-harness cooldown",
+      "fill": "#eff6ff", "stroke": "#3b82f6", "flat": true
+    },
+    {
+      "id": "k2", "kind": "hexagon", "x": 394, "y": 290, "width": 332, "height": 92,
+      "type_label": "PRE TOOL USE GUARD", "label": "Prevent Bloat Early",
+      "sublabel": "Local remote & quota check",
+      "fill": "#fffbeb", "stroke": "#f59e0b", "flat": true
+    },
+    {
+      "id": "k3", "kind": "rect", "x": 394, "y": 426, "width": 332, "height": 92,
+      "type_label": "TASK COMPLETION", "label": "fbk close (Use & Burn)",
+      "sublabel": "Clean merged worktree post-PR",
+      "fill": "#ecfdf5", "stroke": "#10b981", "flat": true
+    },
+    {
+      "id": "c1", "kind": "rect", "x": 812, "y": 154, "width": 252, "height": 92,
+      "type_label": "DAILY SWEEP", "label": "scan / plan / clean / slim",
+      "sublabel": "--harness --older-than --sort",
+      "fill": "#ffffff", "stroke": "#e5e7eb", "flat": true
+    },
+    {
+      "id": "c2", "kind": "rect", "x": 812, "y": 290, "width": 252, "height": 92,
+      "type_label": "BLOAT RECOVERY", "label": "prune-remotes / cutover",
+      "sublabel": "repair-alternates / audit",
+      "fill": "#ffffff", "stroke": "#e5e7eb", "flat": true
+    },
+    {
+      "id": "c3", "kind": "rect", "x": 812, "y": 426, "width": 252, "height": 92,
+      "type_label": "SELF-CHECK & ROLLBACK", "label": "doctor / install / restore",
+      "sublabel": "Idempotent multi-harness sync",
+      "fill": "#ffffff", "stroke": "#e5e7eb", "flat": true
+    }
+  ],
+  "arrows": [
+    { "id": "a1", "source": "h1", "target": "k1", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a2", "source": "h2", "target": "k2", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a3", "source": "h3", "target": "k3", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a4", "source": "k1", "target": "c1", "source_port": "right", "target_port": "left", "flow": "read" },
+    { "id": "a5", "source": "k2", "target": "c2", "source_port": "right", "target_port": "left", "flow": "write" },
+    { "id": "a6", "source": "k3", "target": "c3", "source_port": "right", "target_port": "left", "flow": "control" }
+  ],
+  "footer": "Style 4 · Notion Clean · One engine, seven harnesses, zero vendor lock-in",
+  "footer_x": 40,
+  "footer_y": 604
+}

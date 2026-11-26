@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "mode": "architecture",
+  "template_type": "architecture",
+  "style": 2,
+  "quality_profile": "showcase",
+  "width": 1120,
+  "height": 700,
+  "title": "4-Tier Fail-Closed Safety Model & Zero-Write Probing",
+  "subtitle": "Every branch and worktree passes deterministic guards before touching disk",
+  "containers": [
+    { "id": "waterfall", "x": 36, "y": 104, "width": 310, "height": 520, "label": "Zero-Write Merge Waterfall" },
+    { "id": "tiers", "x": 392, "y": 104, "width": 336, "height": 520, "label": "4-Tier Classification" },
+    { "id": "vault", "x": 774, "y": 104, "width": 310, "height": 520, "label": "Vault & Audit Guarantees" }
+  ],
+  "nodes": [
+    {
+      "id": "w1", "kind": "rect", "x": 56, "y": 156, "width": 270, "height": 76,
+      "type_label": "STEP 1 · ANCESTOR", "label": "git branch --merged",
+      "sublabel": "Base + --extra-base anchors",
+      "fill": "#0f172a", "stroke": "#38bdf8", "flat": true
+    },
+    {
+      "id": "w2", "kind": "rect", "x": 56, "y": 276, "width": 270, "height": 76,
+      "type_label": "STEP 2 · REBASE", "label": "git cherry <base>",
+      "sublabel": "Detects cherry-pick & rebase",
+      "fill": "#0f172a", "stroke": "#38bdf8", "flat": true
+    },
+    {
+      "id": "w3", "kind": "rect", "x": 56, "y": 396, "width": 270, "height": 76,
+      "type_label": "STEP 3 · SQUASH", "label": "Isolated GIT_OBJECT_DIR",
+      "sublabel": "Virtual commit-tree; 0 writes",
+      "fill": "#0f172a", "stroke": "#a78bfa", "flat": true
+    },
+    {
+      "id": "t0", "kind": "rect", "x": 412, "y": 156, "width": 296, "height": 76,
+      "type_label": "TIER 0 · SAFE AUTO", "label": "Merged / Broken / Ancestor",
+      "sublabel": "Clean + past 24h grace",
+      "fill": "#052e16", "stroke": "#22c55e", "flat": true
+    },
+    {
+      "id": "t1", "kind": "rect", "x": 412, "y": 276, "width": 296, "height": 76,
+      "type_label": "TIER 1 · SLIMMABLE", "label": "Untracked Build Caches",
+      "sublabel": "node_modules; ls-files check",
+      "fill": "#082f49", "stroke": "#06b6d4", "flat": true
+    },
+    {
+      "id": "t2", "kind": "rect", "x": 412, "y": 396, "width": 296, "height": 76,
+      "type_label": "TIER 2 · REVIEW NEEDED", "label": "Unmerged / Dirty / gate-*",
+      "sublabel": "Requires --allow-review",
+      "fill": "#451a03", "stroke": "#f59e0b", "flat": true
+    },
+    {
+      "id": "t3", "kind": "rect", "x": 412, "y": 516, "width": 296, "height": 76,
+      "type_label": "TIER 3 · FAIL-CLOSED", "label": "Protected / Active / .delivery",
+      "sublabel": "lsof cwd / lock / .fbk-keep",
+      "fill": "#450a0a", "stroke": "#ef4444", "flat": true
+    },
+    {
+      "id": "v1", "kind": "cylinder", "x": 794, "y": 156, "width": 270, "height": 76,
+      "type_label": "RECOVERY VAULT", "label": "Temp-Ref Bundles",
+      "sublabel": "+ Untracked tar.gz + patch",
+      "fill": "#1e1b4b", "stroke": "#818cf8", "flat": true
+    },
+    {
+      "id": "v2", "kind": "rect", "x": 794, "y": 276, "width": 270, "height": 76,
+      "type_label": "AUDIT LEDGER", "label": "receipts.jsonl",
+      "sublabel": "fbk restore <id> --apply",
+      "fill": "#0f172a", "stroke": "#38bdf8", "flat": true
+    },
+    {
+      "id": "v3", "kind": "rect", "x": 794, "y": 396, "width": 270, "height": 76,
+      "type_label": "PROXY FSCK GATE", "label": "repair-alternates",
+      "sublabel": "Refuses if objects missing",
+      "fill": "#0f172a", "stroke": "#22c55e", "flat": true
+    }
+  ],
+  "arrows": [
+    { "id": "a1", "source": "w1", "target": "w2", "source_port": "bottom", "target_port": "top", "flow": "read" },
+    { "id": "a2", "source": "w2", "target": "w3", "source_port": "bottom", "target_port": "top", "flow": "read" },
+    { "id": "a3", "source": "w1", "target": "t0", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a4", "source": "t0", "target": "v1", "source_port": "right", "target_port": "left", "flow": "write" },
+    { "id": "a5", "source": "t2", "target": "v3", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a6", "source": "v1", "target": "v2", "source_port": "bottom", "target_port": "top", "flow": "write" }
+  ],
+  "footer": "Style 2 · Dark Terminal · --no-optional-locks on all read-only operations",
+  "footer_x": 40,
+  "footer_y": 664
+}

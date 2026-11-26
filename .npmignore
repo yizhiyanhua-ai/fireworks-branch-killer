@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.DS_Store
+.github/
+.cache/
+skills/
+tools/
+tests/__pycache__/

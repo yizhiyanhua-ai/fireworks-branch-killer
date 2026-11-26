@@ -1,0 +1,62 @@
+{
+  "name": "@yizhiyanhua-ai/fireworks-branch-killer",
+  "version": "1.0.0",
+  "description": "Zero-dependency deterministic Git worktree and feature-branch hygiene engine and multi-harness AI Agent Skill.",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "antigravity",
+    "orca",
+    "t3-code",
+    "deepseek-harness",
+    "amy",
+    "agent-skills",
+    "skill",
+    "git",
+    "worktree",
+    "branch-cleanup",
+    "devtools",
+    "hygiene"
+  ],
+  "author": "yizhiyanhua-ai",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yizhiyanhua-ai/fireworks-branch-killer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer/issues"
+  },
+  "homepage": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer#readme",
+  "bin": {
+    "fbk": "scripts/fbk.py",
+    "fireworks-branch-killer": "scripts/fbk.py"
+  },
+  "scripts": {
+    "test": "python3 -m unittest discover -s tests -v",
+    "check": "python3 tools/check_project_consistency.py && python3 tools/distribution.py --check",
+    "sync": "python3 tools/distribution.py --sync",
+    "version": "python3 scripts/fbk.py version"
+  },
+  "files": [
+    "SKILL.md",
+    "README.md",
+    "README.zh.md",
+    "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
+    "SECURITY.md",
+    "config.example.json",
+    "agents/",
+    "assets/",
+    "docs/",
+    "references/",
+    "scripts/",
+    "tests/",
+    "!**/__pycache__/**",
+    "!**/*.pyc"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="fireworks-branch-killer logo">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B1020"/>
+      <stop offset="55%" stop-color="#111936"/>
+      <stop offset="100%" stop-color="#1A132B"/>
+    </linearGradient>
+    <linearGradient id="trunk" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0EA5E9"/>
+      <stop offset="100%" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="spark" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FF5A36"/>
+      <stop offset="55%" stop-color="#FF9F1C"/>
+      <stop offset="100%" stop-color="#FFE066"/>
+    </linearGradient>
+    <linearGradient id="blade" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F8FAFC"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="12" y="12" width="232" height="232" rx="52" fill="url(#bg)" stroke="#263357" stroke-width="3"/>
+
+  <!-- Protected main trunk -->
+  <path d="M 86 202 L 86 58" stroke="url(#trunk)" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="86" cy="202" r="13" fill="#0B1020" stroke="#38BDF8" stroke-width="6"/>
+  <circle cx="86" cy="58" r="13" fill="#0B1020" stroke="#38BDF8" stroke-width="6"/>
+  <circle cx="86" cy="144" r="11" fill="#0B1020" stroke="#38BDF8" stroke-width="5"/>
+
+  <!-- Pruned branch base leading into precision cut -->
+  <path d="M 86 144 C 110 144, 120 124, 134 114" stroke="#38BDF8" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+  <path d="M 86 106 C 104 106, 114 96, 124 88" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Precision crescent pruning arc -->
+  <path d="M 118 164 Q 144 118 162 72" fill="none" stroke="url(#blade)" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- Firework sparks bursting from pruned dead branches -->
+  <g stroke="url(#spark)" stroke-linecap="round">
+    <line x1="146" y1="106" x2="184" y2="74" stroke-width="7"/>
+    <line x1="152" y1="118" x2="202" y2="106" stroke-width="6"/>
+    <line x1="148" y1="130" x2="190" y2="152" stroke-width="6"/>
+    <line x1="138" y1="84" x2="162" y2="48" stroke-width="5"/>
+  </g>
+
+  <circle cx="192" cy="68" r="7" fill="#FFE066"/>
+  <circle cx="208" cy="104" r="6" fill="#FF9F1C"/>
+  <circle cx="196" cy="156" r="6" fill="#FF5A36"/>
+  <circle cx="166" cy="44" r="5" fill="#38BDF8"/>
+  <circle cx="174" cy="134" r="4" fill="#FFE066"/>
+  <circle cx="172" cy="90" r="4" fill="#38BDF8"/>
+  <circle cx="212" cy="132" r="3.5" fill="#FF9F1C"/>
+</svg>

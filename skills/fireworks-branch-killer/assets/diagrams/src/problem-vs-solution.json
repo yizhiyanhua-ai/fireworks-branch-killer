@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "mode": "architecture",
+  "template_type": "architecture",
+  "style": 6,
+  "quality_profile": "showcase",
+  "width": 1120,
+  "height": 700,
+  "title": "Why AI Coding Workspaces Explode — And How fbk Solves It",
+  "subtitle": "From parallel multi-agent worktree sprawl to deterministic, reversible hygiene",
+  "containers": [
+    { "id": "chaos", "x": 36, "y": 104, "width": 320, "height": 520, "label": "Multi-Agent Sprawl (Pain Points)" },
+    { "id": "engine", "x": 400, "y": 104, "width": 320, "height": 520, "label": "fbk Deterministic Engine" },
+    { "id": "outcome", "x": 764, "y": 104, "width": 320, "height": 520, "label": "Clean & Reversible Workspace" }
+  ],
+  "nodes": [
+    {
+      "id": "p1", "kind": "rect", "x": 56, "y": 154, "width": 280, "height": 76,
+      "type_label": "WORKTREE EXPLOSION", "label": "100s of Linked Worktrees",
+      "sublabel": "Duplicate node_modules / .next",
+      "fill": "#fff7ed", "stroke": "#fb923c", "flat": true
+    },
+    {
+      "id": "p2", "kind": "rect", "x": 56, "y": 274, "width": 280, "height": 76,
+      "type_label": "MERGE BLIND SPOTS", "label": "Squash & Rebase Ghosts",
+      "sublabel": "git branch --merged misses PRs",
+      "fill": "#fff7ed", "stroke": "#fb923c", "flat": true
+    },
+    {
+      "id": "p3", "kind": "rect", "x": 56, "y": 394, "width": 280, "height": 76,
+      "type_label": "REMOTE AVALANCHE", "label": "100k+ Local Agent Refs",
+      "sublabel": "Chained tmp clones & alternates",
+      "fill": "#fef2f2", "stroke": "#f87171", "flat": true
+    },
+    {
+      "id": "p4", "kind": "rect", "x": 56, "y": 514, "width": 280, "height": 76,
+      "type_label": "HIGH RISK", "label": "Ad-hoc rm -rf / branch -D",
+      "sublabel": "Kills live agents or WIP",
+      "fill": "#fef2f2", "stroke": "#ef4444", "flat": true
+    },
+    {
+      "id": "e1", "kind": "hexagon", "x": 420, "y": 154, "width": 280, "height": 76,
+      "type_label": "ACTIVE GUARD", "label": "4-Tier Fail-Closed Gate",
+      "sublabel": "lsof + lock + grace + .delivery",
+      "fill": "#ffffff", "stroke": "#d97757", "stroke_width": 1.8, "flat": true
+    },
+    {
+      "id": "e2", "kind": "rect", "x": 420, "y": 274, "width": 280, "height": 76,
+      "type_label": "ZERO-WRITE PROBE", "label": "3-Step Merge Waterfall",
+      "sublabel": "--merged -> cherry -> tmp squash",
+      "fill": "#ffffff", "stroke": "#d97757", "flat": true
+    },
+    {
+      "id": "e3", "kind": "cylinder", "x": 420, "y": 394, "width": 280, "height": 76,
+      "type_label": "RECOVERY VAULT", "label": "Bundle + Untracked Tar",
+      "sublabel": "Append-only JSONL receipts",
+      "fill": "#fffbeb", "stroke": "#f59e0b", "flat": true
+    },
+    {
+      "id": "e4", "kind": "rect", "x": 420, "y": 514, "width": 280, "height": 76,
+      "type_label": "PREVENT RECURRENCE", "label": "PreToolUse Guard",
+      "sublabel": "Blocks /tmp remotes & bloat",
+      "fill": "#fffbeb", "stroke": "#f59e0b", "flat": true
+    },
+    {
+      "id": "o1", "kind": "rect", "x": 784, "y": 154, "width": 280, "height": 76,
+      "type_label": "TIER 0 AUTO-CLEAN", "label": "Safe Pruning + fbk close",
+      "sublabel": "Merged & broken worktrees gone",
+      "fill": "#ecfdf5", "stroke": "#10b981", "flat": true
+    },
+    {
+      "id": "o2", "kind": "rect", "x": 784, "y": 274, "width": 280, "height": 76,
+      "type_label": "TIER 1 DISK SLIMMING", "label": "Reclaim GBs Safely",
+      "sublabel": "Untracked caches only",
+      "fill": "#ecfdf5", "stroke": "#10b981", "flat": true
+    },
+    {
+      "id": "o3", "kind": "rect", "x": 784, "y": 394, "width": 280, "height": 76,
+      "type_label": "CUTOVER & REMOTES", "label": "Unpushed Ledger + Bundle",
+      "sublabel": "Offline restore & proxy fsck",
+      "fill": "#eff6ff", "stroke": "#3b82f6", "flat": true
+    },
+    {
+      "id": "o4", "kind": "rect", "x": 784, "y": 514, "width": 280, "height": 76,
+      "type_label": "CONTINUOUS HYGIENE", "label": "7-Harness Integration",
+      "sublabel": "AGY, Claude, Codex, Orca...",
+      "fill": "#eff6ff", "stroke": "#3b82f6", "flat": true
+    }
+  ],
+  "arrows": [
+    { "id": "a1", "source": "p1", "target": "e1", "source_port": "right", "target_port": "left", "flow": "data" },
+    { "id": "a2", "source": "p2", "target": "e2", "source_port": "right", "target_port": "left", "flow": "data" },
+    { "id": "a3", "source": "p3", "target": "e3", "source_port": "right", "target_port": "left", "flow": "data" },
+    { "id": "a4", "source": "p4", "target": "e4", "source_port": "right", "target_port": "left", "flow": "data" },
+    { "id": "a5", "source": "e1", "target": "o1", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a6", "source": "e2", "target": "o2", "source_port": "right", "target_port": "left", "flow": "control" },
+    { "id": "a7", "source": "e3", "target": "o3", "source_port": "right", "target_port": "left", "flow": "write" },
+    { "id": "a8", "source": "e4", "target": "o4", "source_port": "right", "target_port": "left", "flow": "control" }
+  ],
+  "footer": "fireworks-branch-killer · Dry-run by default · Zero third-party dependencies",
+  "footer_x": 40,
+  "footer_y": 664
+}
