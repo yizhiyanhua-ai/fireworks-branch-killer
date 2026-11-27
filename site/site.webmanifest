@@ -1,0 +1,22 @@
+{
+  "name": "fireworks-branch-killer",
+  "short_name": "fbk",
+  "description": "Zero-dependency deterministic Git worktree & branch hygiene engine and self-evolving fbk doctor for AI coding workspaces.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#090b10",
+  "theme_color": "#ff5226",
+  "icons": [
+    {
+      "src": "assets/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "assets/logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png"
+    }
+  ]
+}

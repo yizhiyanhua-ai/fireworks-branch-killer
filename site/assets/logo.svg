@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <!-- Swiss Kinetic Burst mark matching Option V3-2: parallel rounded branch bars sheared cleanly along a diagonal and bursting into an asymmetric radial firework arc -->
+  <g transform="translate(256 256)">
+    <!-- Four parallel rounded-end incoming branch strokes cleanly sheared at diagonal plane -->
+    <g fill="#FF5226">
+      <path d="M -154 22 L -68 -64 L -48 -44 L -134 42 A 14.14 14.14 0 1 1 -154 22 Z" />
+      <path d="M -154 68 L -34 -52 L -14 -32 L -134 88 A 14.14 14.14 0 1 1 -154 68 Z" />
+      <path d="M -118 118 L 0 0 L 20 20 L -98 138 A 14.14 14.14 0 1 1 -118 118 Z" />
+      <path d="M -72 154 L 34 48 L 54 68 L -52 174 A 14.14 14.14 0 1 1 -72 154 Z" />
+    </g>
+
+    <!-- Seven asymmetric radial firework burst wedges -->
+    <path d="M -24 -42 L -56 -112 A 13 13 0 0 1 -32 -122 L -8 -52 Z" fill="#FF5226" />
+    <path d="M -4 -30 L -14 -162 A 14 14 0 0 1 14 -162 L 10 -34 Z" fill="#FF5226" />
+    <path d="M 14 -48 L 58 -148 A 14 14 0 0 1 84 -136 L 34 -42 Z" fill="#FF9500" />
+    <path d="M 4 -12 L 108 -116 A 14 14 0 0 1 128 -96 L 16 -4 Z" fill="#FF5226" />
+    <path d="M 52 -24 L 138 -74 A 14 14 0 0 1 152 -50 L 66 -2 Z" fill="#FF9500" />
+    <path d="M 8 10 L 146 -10 A 14 14 0 0 1 146 18 L 8 18 Z" fill="#FF5226" />
+    <path d="M 42 30 L 142 66 A 13 13 0 0 1 132 90 L 34 48 Z" fill="#FF5226" />
+  </g>
+</svg>

@@ -1,6 +1,6 @@
 [English](README.md) | [中文](README.zh.md)
 
-[架构设计](docs/ARCHITECTURE.md) · [安全策略](references/safety-policy.md) · [跨 Harness 自动化接入](references/automation-setup.md) · [更新日志](CHANGELOG.md)
+[官网 (getfbk.dev)](https://getfbk.dev) · [架构设计](docs/ARCHITECTURE.md) · [官网部署指南](docs/DEPLOY-WEBSITE.md) · [安全策略](references/safety-policy.md) · [跨 Harness 自动化接入](references/automation-setup.md) · [更新日志](CHANGELOG.md)
 
 <p align="center">
   <img src="assets/logo.png" alt="fireworks-branch-killer logo" width="144" />

@@ -30,7 +30,7 @@
   "bugs": {
     "url": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer/issues"
   },
-  "homepage": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer#readme",
+  "homepage": "https://getfbk.dev",
   "bin": {
     "fbk": "bin/fbk.js",
     "fireworks-branch-killer": "bin/fbk.js"

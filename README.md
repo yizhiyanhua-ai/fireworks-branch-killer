@@ -1,6 +1,6 @@
 [English](README.md) | [中文](README.zh.md)
 
-[Architecture](docs/ARCHITECTURE.md) · [Safety Policy](references/safety-policy.md) · [Automation Setup](references/automation-setup.md) · [Changelog](CHANGELOG.md)
+[Website](https://getfbk.dev) · [Architecture](docs/ARCHITECTURE.md) · [Deploy Website](docs/DEPLOY-WEBSITE.md) · [Safety Policy](references/safety-policy.md) · [Automation Setup](references/automation-setup.md) · [Changelog](CHANGELOG.md)
 
 <p align="center">
   <img src="assets/logo.png" alt="fireworks-branch-killer logo" width="144" />

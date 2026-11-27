@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://getfbk.dev/sitemap.xml
