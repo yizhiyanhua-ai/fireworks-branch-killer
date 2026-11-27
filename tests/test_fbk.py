@@ -1355,6 +1355,78 @@ class TestFireworksBranchKiller(unittest.TestCase):
         self.assertEqual(w_st["tier"], 2)
         self.assertIn("branch_has_stash", w_st["reasons"])
 
+    def test_33_scale_canary_no_vault_amplification(self) -> None:
+        repo = self.root / "scale-canary-repo"
+        init_repo(repo)
+
+        # Commit an incompressible 2 MiB binary blob on main
+        blob_path = repo / "assets" / "blob.bin"
+        blob_path.parent.mkdir(parents=True, exist_ok=True)
+        blob_path.write_bytes(os.urandom(2 * 1024 * 1024))
+        old_ts = f"{int(time.time()) - 30 * 86400} +0000"
+        git_env = {"GIT_AUTHOR_DATE": old_ts, "GIT_COMMITTER_DATE": old_ts}
+        run_cmd(["git", "-C", str(repo), "add", "assets/blob.bin"], env=git_env)
+        c_blob = run_cmd(["git", "-C", str(repo), "commit", "-m", "add 2MB blob"], env=git_env)
+        self.assertEqual(c_blob.returncode, 0, c_blob.stderr)
+
+        baseline_bundle = self.tmp / "baseline.bundle"
+        b_proc = run_cmd(["git", "-C", str(repo), "bundle", "create", str(baseline_bundle), "main"])
+        self.assertEqual(b_proc.returncode, 0, b_proc.stderr)
+        baseline_bytes = baseline_bundle.stat().st_size
+        self.assertGreaterEqual(baseline_bytes, 2 * 1024 * 1024)
+
+        # Create 30 stale unmerged branches sharing the 2 MiB base history
+        expected_shas = {}
+        for i in range(30):
+            bname = f"feat/scale-{i}"
+            run_cmd(["git", "-C", str(repo), "checkout", "-b", bname, "main"])
+            expected_shas[bname] = git_commit(repo, f"s_{i}.txt", f"scale-{i}\n", f"scale {i}", days_ago=15)
+        run_cmd(["git", "-C", str(repo), "checkout", "main"])
+
+        cl = self.run_fbk(
+            [
+                "clean",
+                "--repo",
+                str(repo),
+                "--tier",
+                "0,2",
+                "--allow-review",
+                "--min-free-gb",
+                "0",
+                "--apply",
+                "--format",
+                "json",
+            ]
+        )
+        self.assertEqual(cl.returncode, 0, cl.stderr or cl.stdout)
+        data = json.loads(cl.stdout)
+        self.assertEqual(data["errors"], [])
+
+        vault_dir = Path(data["vault_dir"])
+        bundles = list(vault_dir.glob("*.bundle"))
+        self.assertEqual(len(bundles), 1, f"Expected single aggregated bundle, got {bundles}")
+
+        total_bundle_bytes = sum(p.stat().st_size for p in bundles)
+        self.assertLess(
+            total_bundle_bytes,
+            int(baseline_bytes * 1.5),
+            f"Vault amplification regression: {total_bundle_bytes} >= 1.5x {baseline_bytes}",
+        )
+
+        manifest = json.loads((vault_dir / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(manifest["entries"]), 30)
+        self.assertEqual({e["bundle"] for e in manifest["entries"]}, {bundles[0].name})
+
+        ver = run_cmd(["git", "-C", str(repo), "bundle", "verify", str(bundles[0])])
+        self.assertEqual(ver.returncode, 0, ver.stderr)
+
+        for sample in ("feat/scale-0", "feat/scale-29"):
+            rst = self.run_fbk(["restore", data["receipt_id"], "--branch", sample, "--apply", "--format", "json"])
+            self.assertEqual(rst.returncode, 0, rst.stderr or rst.stdout)
+            chk = run_cmd(["git", "-C", str(repo), "rev-parse", f"refs/heads/{sample}"])
+            self.assertEqual(chk.returncode, 0, chk.stderr)
+            self.assertEqual(chk.stdout.strip(), expected_shas[sample])
+
 
 if __name__ == "__main__":
     unittest.main()
