@@ -5,6 +5,18 @@ All notable changes to `fireworks-branch-killer` will be documented in this file
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-11-27
+
+### Fixed
+- **P0 Per-Repo Aggregated Recovery Vault Bundles (`--stdin` + `verify`)**: Batch `clean --apply` now groups all unmerged branches and detached HEAD commits per repository into a single multi-ref `<repo_hash>-vault.bundle` via `git bundle create --stdin`, followed by `git bundle verify` and `git bundle list-heads` integrity checks. Eliminates 60–400× duplicate full-history bundle bloat when archiving hundreds of branches from the same repository, while remaining 100% compatible with `fbk restore`.
+- **P0 Preflight Disk Headroom Guard & Shallow Clone Protection**: Added fail-closed `min_free_disk_gb` (default `5.0`, overridable via `--min-free-gb`) before writing Recovery Vault bundles, dirty snapshots, or cutover bundles; detects shallow repositories (`git rev-parse --is-shallow-repository`) and refuses unsafe partial bundle archiving unless `--allow-shallow-vault` is explicitly set.
+- **P1 `audit-remote` Symref & Environment Branch Protection**: Filtered `%(symref)` / `refs/remotes/<remote>/HEAD` entries so `origin/HEAD` is never misclassified as an `"origin"` deletable branch, and added `remote_protected_branch_patterns` (`prd`, `prod`, `test`, `qa`, `stage`, `staging`, `next`, `release/*`, `prod*`) to prevent deleting shared environment trunks.
+- **P1 `prune-remotes --dedupe-canonical` & Anchor Remote Protection**: Added `--dedupe-canonical` to deduplicate redundant agent alias remotes pointing to the same normalized canonical Git URL (stripping scheme/SCP/`user@`/`.git`), retaining `origin` and `protected_remote_patterns` (`upstream`, `prod-*`, `*anchor*`) and running `git pack-refs --all --prune`.
+- **P2 Branch-Scoped Stash Matching & `origin/HEAD` Drift Guard**: Parsed `git stash list` branch metadata (`On <branch>:` / `WIP on <branch>:`) so repository-level stashes only protect their owning branch/worktree (or detached worktrees for anonymous `(no branch)` stashes) instead of blocking hundreds of clean linked worktrees. Hardened `detect_base_branch()` against drifted feature-branch `origin/HEAD` refs in pseudo-primary clones.
+
+### Tests
+- Added `test_29`–`test_32` (32 isolated sandbox unit tests total) covering aggregated per-repo Vault bundling + restore, disk headroom fail-closed guard + shallow repo protection, `audit-remote` symref/environment protection + `prune-remotes --dedupe-canonical`, and branch-scoped stash classification.
+
 ## [1.1.0] - 2026-11-27
 
 ### Added

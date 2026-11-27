@@ -21,7 +21,7 @@ Keep multi-agent AI coding workspaces clean across **Claude Code, Codex, Antigra
 
 1. **Dry-Run First & Zero-Write Probing**: Never run destructive commands without first inspecting `scan` or `plan` output. `clean`, `close`, `slim`, `restore`, `install`, `prune-remotes`, `cutover-bundle`, and `repair-alternates` are dry-run by default and only mutate when `--apply` is passed. All read-only commands use `--no-optional-locks` and an isolated temp `GIT_OBJECT_DIRECTORY` for squash probes so real repos are never touched.
 2. **Tier 3 Hard Guard (Fail-Closed)**: Never delete protected branches (`main`, `master`, `develop`, `dev`, `release/*`, `prod*`, detected base branch, or `--extra-base` anchors), locked worktrees, worktrees inside the 24h grace period, worktrees with `index.lock` / `.fbk-keep` / active process `cwd` / unknown `git status`, or primary repositories with dependent linked worktrees. If `lsof` is unavailable, batch `--apply` fails closed unless `--allow-without-proc-check` is explicitly passed.
-3. **Detached HEAD & Hardened Recovery Vault**: Detached HEAD worktrees MUST pass ancestry verification against the base branch (or `--extra-base`) before entering Tier 0. Any non-ancestor deletion (`squash_merged`, `cherry_merged`, unmerged detached HEAD, Tier 2 `--allow-review`, or `close --force-unmerged`) MUST archive a `git bundle` (plus `git diff` + untracked `tar.gz` for `--allow-dirty`) into `<state_dir>/vault/<receipt_id>/` before deletion.
+3. **Detached HEAD & Hardened Recovery Vault**: Detached HEAD worktrees MUST pass ancestry verification against the base branch (or `--extra-base`) before entering Tier 0. Any non-ancestor deletion (`squash_merged`, `cherry_merged`, unmerged detached HEAD, Tier 2 `--allow-review`, or `close --force-unmerged`) archives all unmerged items **per repository into a single aggregated multi-ref `.bundle` via `--stdin`** + `git bundle verify` (plus `git diff` + untracked `tar.gz` for `--allow-dirty`) into `<state_dir>/vault/<receipt_id>/` before deletion. Vault writes are gated by a fail-closed disk headroom guard (`--min-free-gb`, default `5.0` GiB) and shallow-clone protection (`--allow-shallow-vault` required for shallow repos).
 4. **Integration Boundary (`pipelined-tdd-delivery` & `fireworks-*`)**:
    - Worktrees containing `.delivery` or `artifacts/pipeline-metrics` are automatically protected as Tier 3 (`active_delivery_marker`) unless `--ignore-delivery-marker` is explicitly passed after delivery closure.
    - Only run `fbk close` **after** the slice/PR has been merged, delivered, and closed, or the user explicitly confirms abandoning the branch.
@@ -56,8 +56,8 @@ python3 ./scripts/fbk.py slim --root . --apply
 
 ### 4. Severe Bloat Governance (`prune-remotes`, `cutover-bundle`, `repair-alternates`, `audit-remote`)
 ```bash
-# Prune local/tmp/broken agent remotes & pack refs (never touches canonical origin)
-python3 ./scripts/fbk.py prune-remotes --repo /path/to/repo
+# Prune local/tmp/broken or duplicate canonical agent remotes & pack refs (never touches origin/anchor)
+python3 ./scripts/fbk.py prune-remotes --repo /path/to/repo --dedupe-canonical
 
 # Export unpushed branches manifest + offline bundle for clean-slate cutover (wt > 50 or remote_refs > 10k)
 python3 ./scripts/fbk.py cutover-bundle --repo /path/to/repo --apply
@@ -65,7 +65,7 @@ python3 ./scripts/fbk.py cutover-bundle --repo /path/to/repo --apply
 # Verify self-containment via isolated proxy fsck before pruning broken alternates
 python3 ./scripts/fbk.py repair-alternates --repo /path/to/repo
 
-# Read-only 3-tier audit of origin remote branches
+# Read-only 3-tier audit of origin remote branches (skips origin/HEAD symref & protects prd/test/next/staging)
 python3 ./scripts/fbk.py audit-remote --repo /path/to/repo
 ```
 

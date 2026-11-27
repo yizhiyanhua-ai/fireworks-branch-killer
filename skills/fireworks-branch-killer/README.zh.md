@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Python-3.9%2B%20零依赖-3776AB" alt="Python 3.9+ 零依赖" />
   <img src="https://img.shields.io/badge/兼容%20Harness-7%20款主流工具-10a37f" alt="兼容 7 款 Harness" />
   <img src="https://img.shields.io/badge/安全模型-四级%20Fail--Closed-d97757" alt="四级 Fail-Closed" />
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-28%20项沙箱单测-22c55e" alt="28 项沙箱单测" /></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-32%20项沙箱单测-22c55e" alt="32 项沙箱单测" /></a>
 </p>
 
 ---

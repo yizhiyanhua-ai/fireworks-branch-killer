@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Python-3.9%2B%20Zero--Deps-3776AB" alt="Python 3.9+ Zero-Deps" />
   <img src="https://img.shields.io/badge/Harnesses-7%20Supported-10a37f" alt="7 Harnesses Supported" />
   <img src="https://img.shields.io/badge/Safety-4--Tier%20Fail--Closed-d97757" alt="4-Tier Fail-Closed" />
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-28%20Sandbox%20Tests-22c55e" alt="28 Sandbox Tests" /></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-32%20Sandbox%20Tests-22c55e" alt="32 Sandbox Tests" /></a>
 </p>
 
 ---

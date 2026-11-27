@@ -906,7 +906,7 @@ class TestFireworksBranchKiller(unittest.TestCase):
         import re as _re
 
         v = json.loads(self.run_fbk(["version", "--format", "json"]).stdout)
-        self.assertEqual(v["version"], "1.1.0")
+        self.assertEqual(v["version"], "1.1.1")
         self.assertTrue(Path(v["skill_root"]).is_dir())
         fbk_text = FBK_PATH.read_text(encoding="utf-8")
         hook_text = HOOK_PATH.read_text(encoding="utf-8")
@@ -1137,6 +1137,223 @@ class TestFireworksBranchKiller(unittest.TestCase):
         self.assertGreater(prof["cumulative_freed_bytes"], 0)
         pb_text = (self.state_dir / "playbook.md").read_text(encoding="utf-8")
         self.assertIn("Resolved Wins", pb_text)
+
+    def test_29_vault_repo_batch_aggregation_and_restore(self) -> None:
+        repo = self.root / "batch-vault-repo"
+        init_repo(repo)
+        expected_shas = {}
+
+        # Create 5 old unmerged branches in one repository
+        for i in range(5):
+            bname = f"feat/unmerged-{i}"
+            run_cmd(["git", "-C", str(repo), "checkout", "-b", bname, "main"])
+            expected_shas[bname] = git_commit(repo, f"u_{i}.txt", f"data-{i}\n", f"commit {i}", days_ago=10)
+        run_cmd(["git", "-C", str(repo), "checkout", "main"])
+
+        # Add 1 old unmerged detached HEAD linked worktree
+        wt_det = self.root / "batch-detached-wt"
+        run_cmd(["git", "-C", str(repo), "worktree", "add", "--detach", str(wt_det), "main"])
+        det_sha = git_commit(wt_det, "detached.txt", "detached work\n", "detached commit", days_ago=10)
+        age_path(wt_det, days_ago=10)
+        expected_shas[f"detached-{wt_det.name}"] = det_sha
+
+        cl = self.run_fbk(
+            [
+                "clean",
+                "--repo",
+                str(repo),
+                "--tier",
+                "0,2",
+                "--allow-review",
+                "--min-free-gb",
+                "0",
+                "--apply",
+                "--format",
+                "json",
+            ]
+        )
+        self.assertEqual(cl.returncode, 0, cl.stderr or cl.stdout)
+        data = json.loads(cl.stdout)
+        self.assertEqual(data["errors"], [])
+        self.assertFalse(wt_det.exists())
+
+        vault_dir = Path(data["vault_dir"])
+        bundles = list(vault_dir.glob("*.bundle"))
+        # CRITICAL P0 FIX: 6 unmerged refs in one repo MUST produce exactly 1 aggregated .bundle file!
+        self.assertEqual(len(bundles), 1, f"Expected 1 aggregated bundle, got {bundles}")
+
+        manifest = json.loads((vault_dir / "manifest.json").read_text(encoding="utf-8"))
+        self.assertEqual(len(manifest["entries"]), 6)
+        self.assertEqual({e["bundle"] for e in manifest["entries"]}, {bundles[0].name})
+
+        ver = run_cmd(["git", "-C", str(repo), "bundle", "verify", str(bundles[0])])
+        self.assertEqual(ver.returncode, 0, ver.stderr)
+
+        rst = self.run_fbk(["restore", data["receipt_id"], "--apply", "--format", "json"])
+        self.assertEqual(rst.returncode, 0, rst.stderr or rst.stdout)
+        rst_data = json.loads(rst.stdout)
+        self.assertEqual(len(rst_data["restored"]), 6)
+        self.assertEqual(rst_data["errors"], [])
+
+        for bname, sha in expected_shas.items():
+            chk = run_cmd(["git", "-C", str(repo), "rev-parse", f"refs/heads/{bname}"])
+            self.assertEqual(chk.returncode, 0, chk.stderr)
+            self.assertEqual(chk.stdout.strip(), sha)
+
+    def test_30_disk_headroom_guard_and_shallow_repo_protection(self) -> None:
+        # Scenario A: Disk headroom fail-closed guard refuses Vault write and leaves branch untouched
+        repo = self.root / "disk-guard-repo"
+        init_repo(repo)
+        run_cmd(["git", "-C", str(repo), "checkout", "-b", "feat/keep-safe", "main"])
+        git_commit(repo, "safe.txt", "keep\n", "unmerged work", days_ago=10)
+        run_cmd(["git", "-C", str(repo), "checkout", "main"])
+
+        guard_res = self.run_fbk(
+            [
+                "clean",
+                "--repo",
+                str(repo),
+                "--tier",
+                "0,2",
+                "--allow-review",
+                "--min-free-gb",
+                "999999",
+                "--apply",
+                "--format",
+                "json",
+            ]
+        )
+        self.assertNotEqual(guard_res.returncode, 0)
+        guard_data = json.loads(guard_res.stdout)
+        self.assertIn("Insufficient free disk space", "\n".join(guard_data["errors"]))
+        self.assertEqual(guard_data["executed"], [])
+        self.assertIsNone(guard_data["vault_dir"])
+        self.assertEqual(run_cmd(["git", "-C", str(repo), "show-ref", "--verify", "refs/heads/feat/keep-safe"]).returncode, 0)
+
+        # Scenario B: Shallow clone refuses unreliable vault bundling and protects unmerged branch
+        upstream_repo = self.tmp / "shallow-upstream"
+        init_repo(upstream_repo)
+        git_commit(upstream_repo, "hist1.txt", "1\n", "hist1", days_ago=25)
+        git_commit(upstream_repo, "hist2.txt", "2\n", "hist2", days_ago=20)
+
+        shallow_repo = self.root / "shallow-local"
+        cln = run_cmd(["git", "clone", "--depth", "1", f"file://{upstream_repo}", str(shallow_repo)])
+        self.assertEqual(cln.returncode, 0, cln.stderr)
+        run_cmd(["git", "-C", str(shallow_repo), "config", "user.email", "test@example.com"])
+        run_cmd(["git", "-C", str(shallow_repo), "config", "user.name", "Test User"])
+        run_cmd(["git", "-C", str(shallow_repo), "checkout", "-b", "feat/shallow-unmerged", "main"])
+        git_commit(shallow_repo, "sh.txt", "shallow commit\n", "shallow work", days_ago=10)
+        run_cmd(["git", "-C", str(shallow_repo), "checkout", "main"])
+
+        sh_res = self.run_fbk(
+            [
+                "clean",
+                "--repo",
+                str(shallow_repo),
+                "--tier",
+                "0,2",
+                "--allow-review",
+                "--min-free-gb",
+                "0",
+                "--apply",
+                "--format",
+                "json",
+            ]
+        )
+        self.assertNotEqual(sh_res.returncode, 0)
+        sh_data = json.loads(sh_res.stdout)
+        self.assertIn("shallow", "\n".join(sh_data["errors"]).lower())
+        self.assertEqual(
+            run_cmd(["git", "-C", str(shallow_repo), "show-ref", "--verify", "refs/heads/feat/shallow-unmerged"]).returncode,
+            0,
+        )
+
+    def test_31_audit_remote_and_prune_remotes_dedupe_canonical(self) -> None:
+        bare_origin = self.tmp / "origin-audit.git"
+        run_cmd(["git", "init", "--bare", "-b", "main", str(bare_origin)])
+
+        work_repo = self.root / "remote-audit-repo"
+        run_cmd(["git", "clone", str(bare_origin), str(work_repo)])
+        run_cmd(["git", "-C", str(work_repo), "config", "user.email", "test@example.com"])
+        run_cmd(["git", "-C", str(work_repo), "config", "user.name", "Test User"])
+        git_commit(work_repo, "init.txt", "init\n", "init", days_ago=30)
+        run_cmd(["git", "-C", str(work_repo), "push", "-u", "origin", "main"])
+        run_cmd(["git", "-C", str(bare_origin), "symbolic-ref", "HEAD", "refs/heads/main"])
+
+        # Create merged env branches (prd/test/next) and a truly deletable merged feature branch
+        for eb in ("prd", "test", "next", "feat/merged-old"):
+            run_cmd(["git", "-C", str(work_repo), "checkout", "-b", eb, "main"])
+            git_commit(work_repo, f"{eb.replace('/', '_')}.txt", "ok\n", f"add {eb}", days_ago=25)
+            run_cmd(["git", "-C", str(work_repo), "checkout", "main"])
+            run_cmd(["git", "-C", str(work_repo), "merge", "--no-ff", eb, "-m", f"merge {eb}"])
+            run_cmd(["git", "-C", str(work_repo), "push", "origin", eb])
+        run_cmd(["git", "-C", str(work_repo), "push", "origin", "main"])
+        run_cmd(["git", "-C", str(work_repo), "remote", "set-head", "origin", "main"])
+
+        ar = self.run_fbk(["audit-remote", "--repo", str(work_repo), "--format", "json"])
+        self.assertEqual(ar.returncode, 0, ar.stderr or ar.stdout)
+        ar_data = json.loads(ar.stdout)
+        all_names = [it["name"] for items in ar_data["buckets"].values() for it in items]
+        self.assertNotIn("origin", all_names)
+        self.assertNotIn("HEAD", all_names)
+        prot_names = {it["name"] for it in ar_data["buckets"]["protected"]}
+        self.assertTrue({"main", "prd", "test", "next"}.issubset(prot_names))
+        del_names = {it["name"] for it in ar_data["buckets"]["merged_deletable"]}
+        self.assertIn("feat/merged-old", del_names)
+
+        # Duplicate canonical remote aliases + protected prod-anchor
+        run_cmd(["git", "-C", str(work_repo), "remote", "set-url", "origin", "https://github.com/example/demo.git"])
+        run_cmd(["git", "-C", str(work_repo), "remote", "add", "codex-1", "git@github.com:example/demo.git"])
+        run_cmd(["git", "-C", str(work_repo), "remote", "add", "claude-2", "ssh://git@github.com/Example/Demo/"])
+        run_cmd(["git", "-C", str(work_repo), "remote", "add", "prod-anchor", "https://github.com/example/demo.git"])
+
+        pr = self.run_fbk(["prune-remotes", "--repo", str(work_repo), "--dedupe-canonical", "--apply", "--format", "json"])
+        self.assertEqual(pr.returncode, 0, pr.stderr or pr.stdout)
+        pr_data = json.loads(pr.stdout)
+        removed_remotes = {a["remote"] for a in pr_data["actions"] if a["status"] == "removed"}
+        self.assertEqual(removed_remotes, {"codex-1", "claude-2"})
+
+        rem_list = set(run_cmd(["git", "-C", str(work_repo), "remote"]).stdout.splitlines())
+        self.assertIn("origin", rem_list)
+        self.assertIn("prod-anchor", rem_list)
+        self.assertNotIn("codex-1", rem_list)
+        self.assertNotIn("claude-2", rem_list)
+
+    def test_32_stash_scoped_to_branch_not_blocking_unrelated_worktrees(self) -> None:
+        repo = self.root / "stash-scope-repo"
+        init_repo(repo)
+
+        # Create clean merged old branch & linked worktree
+        wt_clean = self.root / "wt-clean-old"
+        run_cmd(["git", "-C", str(repo), "worktree", "add", "-b", "feat/clean-old", str(wt_clean)])
+        git_commit(wt_clean, "clean.txt", "done\n", "clean commit", days_ago=15)
+        run_cmd(["git", "-C", str(repo), "merge", "--no-ff", "feat/clean-old", "-m", "merge clean"])
+        age_path(wt_clean, days_ago=15)
+
+        # Create another branch & linked worktree with its own named stash
+        wt_stashed = self.root / "wt-stashed"
+        run_cmd(["git", "-C", str(repo), "worktree", "add", "-b", "feat/stashed", str(wt_stashed)])
+        git_commit(wt_stashed, "stashed.txt", "base\n", "base stashed", days_ago=15)
+        (wt_stashed / "stashed.txt").write_text("wip change\n", encoding="utf-8")
+        run_cmd(["git", "-C", str(wt_stashed), "stash", "push", "-m", "stash-on-feat"])
+        run_cmd(["git", "-C", str(repo), "merge", "--no-ff", "feat/stashed", "-m", "merge base stashed"])
+        age_path(wt_stashed, days_ago=15)
+
+        # Create a global stash on primary `main`
+        (repo / "README.md").write_text("# modified main\n", encoding="utf-8")
+        run_cmd(["git", "-C", str(repo), "stash", "push", "-m", "main-wip"])
+
+        sc = json.loads(self.run_fbk(["scan", "--repo", str(repo), "--format", "json"]).stdout)
+        by_path = {w["path"]: w for w in sc["worktrees"]}
+
+        w_clean = by_path[str(wt_clean)]
+        self.assertFalse(w_clean["has_stash"])
+        self.assertEqual(w_clean["tier"], 0)
+
+        w_st = by_path[str(wt_stashed)]
+        self.assertTrue(w_st["has_stash"])
+        self.assertEqual(w_st["tier"], 2)
+        self.assertIn("branch_has_stash", w_st["reasons"])
 
 
 if __name__ == "__main__":

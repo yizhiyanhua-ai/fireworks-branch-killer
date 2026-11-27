@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-VERSION = "1.1.0"
+VERSION = "1.1.1"
 DEFAULT_STATE_DIR = os.path.join(
     os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
     "fireworks-branch-killer",
@@ -109,13 +109,26 @@ SKIP_NESTED_NAMES = {
 
 CANONICAL_REMOTE_RE = re.compile(r"^(https?://|ssh://|git://|git@[^:]+:)", re.IGNORECASE)
 _REFLOG_TS_RE = re.compile(r">\s+(\d+)\s+[+-]\d{4}\t")
+_STASH_BRANCH_RE = re.compile(r"^stash@\{\d+\}:\s+(?:WIP\s+on|On)\s+(.+?):(?:\s|$)")
 
 DEFAULT_CONFIG: Dict[str, Any] = {
     "grace_period_hours": 24,
+    "min_free_disk_gb": 5.0,
     "protected_branch_patterns": [
         "^(main|master|develop|dev)$",
         "^release/.*",
         "^prod.*",
+    ],
+    "remote_protected_branch_patterns": [
+        "^(main|master|develop|dev|prd|prod|test|qa|stage|staging|next)$",
+        "^release/.*",
+        "^prod.*",
+    ],
+    "protected_remote_patterns": [
+        "^origin$",
+        "^upstream$",
+        "^prod[-_].*",
+        ".*anchor.*",
     ],
     "protected_path_patterns": [],
     "vault_retention_days": 7,
@@ -609,8 +622,8 @@ def count_remote_refs_fast(repo: str) -> int:
         return 0
 
 
-def inspect_repo_remotes(repo: str) -> Tuple[str, str, int, List[Dict[str, str]], int]:
-    """Return (origin_url, origin_kind, total_remotes, non_canonical_remotes, remote_ref_count)."""
+def get_repo_remotes_map(repo: str) -> Dict[str, str]:
+    """Return {remote_name: fetch_url} for all configured git remotes."""
     try:
         proc = run_git(repo, ["remote", "-v"], timeout=10)
     except subprocess.TimeoutExpired:
@@ -624,7 +637,31 @@ def inspect_repo_remotes(repo: str) -> Tuple[str, str, int, List[Dict[str, str]]
                 tag = parts[2] if len(parts) >= 3 else "(fetch)"
                 if tag == "(fetch)" or name not in remotes:
                     remotes[name] = url
+    return remotes
 
+
+def normalize_canonical_remote_url(url: str) -> str:
+    """Normalize git remote URL (https/ssh/scp/.git/trailing slash) for duplicate detection."""
+    u = url.strip()
+    for prefix in ("https://", "http://", "ssh://", "git://"):
+        if u.lower().startswith(prefix):
+            u = u[len(prefix) :]
+            break
+    # Convert SCP-like git@host:org/repo or user@host:org/repo -> host/org/repo
+    scp_m = re.match(r"^(?:[^@/]+@)?([^:/]+):(.+)$", u)
+    if scp_m and not u.startswith("["):
+        u = f"{scp_m.group(1)}/{scp_m.group(2)}"
+    else:
+        u = re.sub(r"^[^@/]+@", "", u)
+    u = u.rstrip("/")
+    if u.lower().endswith(".git"):
+        u = u[:-4]
+    return u.lower()
+
+
+def inspect_repo_remotes(repo: str) -> Tuple[str, str, int, List[Dict[str, str]], int]:
+    """Return (origin_url, origin_kind, total_remotes, non_canonical_remotes, remote_ref_count)."""
+    remotes = get_repo_remotes_map(repo)
     origin_url = remotes.get("origin", "")
     origin_kind = classify_remote_url(origin_url)
     non_canonical = [
@@ -813,20 +850,33 @@ def detect_base_branch(
     repo: str,
     local_branches: Set[str],
     prot_branch_res: List[re.Pattern[str]],
+    origin_kind: str = "canonical_remote",
 ) -> Optional[str]:
     """
     Strictly detect base branch without ever falling back to arbitrary feature branches.
     May return a remote tracking ref like 'refs/remotes/origin/main' or None if unknown.
     """
+    std_trunk_names = ("main", "master", "develop", "dev", "trunk")
+    has_std_local_or_remote = any(c in local_branches for c in std_trunk_names[:4]) or any(
+        run_git(repo, ["rev-parse", "--verify", f"refs/remotes/origin/{c}^{{commit}}"]).returncode == 0
+        for c in ("main", "master", "develop")
+    )
+
     proc = run_git(repo, ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"])
     if proc.returncode == 0:
         cand = proc.stdout.strip()
         short = cand[len("origin/") :] if cand.startswith("origin/") else cand
-        if short in local_branches:
-            return short
-        remote_ref = f"refs/remotes/{cand}" if cand.startswith("origin/") else f"refs/remotes/origin/{cand}"
-        if run_git(repo, ["rev-parse", "--verify", f"{remote_ref}^{{commit}}"]).returncode == 0:
-            return remote_ref
+        is_plausible_base = (
+            short in std_trunk_names
+            or any(rx.search(short) for rx in prot_branch_res)
+            or (origin_kind == "canonical_remote" and not has_std_local_or_remote)
+        )
+        if is_plausible_base:
+            if short in local_branches:
+                return short
+            remote_ref = f"refs/remotes/{cand}" if cand.startswith("origin/") else f"refs/remotes/origin/{cand}"
+            if run_git(repo, ["rev-parse", "--verify", f"{remote_ref}^{{commit}}"]).returncode == 0:
+                return remote_ref
 
     for cand in ("main", "master", "develop", "dev", "prod/main", "prod/cp-main", "prod/admin-main"):
         if cand in local_branches:
@@ -1171,6 +1221,26 @@ def _probe_worktree_disk_state(
     }
 
 
+def parse_stash_branches(stash_lines: List[str]) -> Tuple[Set[str], bool]:
+    """Parse `git stash list` entries into (named_branches_with_stash, has_anonymous_stash)."""
+    stashed_branches: Set[str] = set()
+    has_anon = False
+    for ln in stash_lines:
+        s = ln.strip()
+        if not s:
+            continue
+        m = _STASH_BRANCH_RE.match(s)
+        if not m:
+            has_anon = True
+            continue
+        b_name = m.group(1).strip()
+        if not b_name or b_name == "(no branch)" or b_name.startswith("("):
+            has_anon = True
+        else:
+            stashed_branches.add(b_name)
+    return stashed_branches, has_anon
+
+
 def _scan_single_repo(
     repo: str,
     cfg: Dict[str, Any],
@@ -1271,7 +1341,7 @@ def _scan_single_repo(
             }
         )
 
-    base_branch = detect_base_branch(repo, local_branch_names, prot_branch_res)
+    base_branch = detect_base_branch(repo, local_branch_names, prot_branch_res, origin_kind=origin_kind)
     base_sha = ""
     if base_branch:
         bp = run_git(repo, ["rev-parse", "--verify", f"{base_branch}^{{commit}}"])
@@ -1324,6 +1394,7 @@ def _scan_single_repo(
 
     stash_proc = run_git(repo, ["stash", "list"])
     stash_lines = stash_proc.stdout.splitlines() if stash_proc.returncode == 0 else []
+    stashed_branches, has_anon_stash = parse_stash_branches(stash_lines)
 
     branch_to_wt: Dict[str, str] = {}
     for w in wt_entries:
@@ -1465,7 +1536,12 @@ def _scan_single_repo(
 
         within_grace = (now_ts - last_ts) < grace_secs if last_ts > 0 else False
         active_proc = bool(proc_cmds)
-        has_stash = bool(b_name and any(f"On {b_name}:" in sl for sl in stash_lines))
+        if b_name:
+            has_stash = b_name in stashed_branches
+        elif w.get("detached"):
+            has_stash = has_anon_stash
+        else:
+            has_stash = False
 
         reasons: List[str] = []
         tier = 3
@@ -1772,8 +1848,35 @@ def scan_workspace(
     return result
 
 
+def check_disk_headroom(target_dir: Path, min_free_gb: float) -> Tuple[bool, int, str]:
+    """Fail-closed disk headroom guard before writing Vault bundles or cutover exports."""
+    if min_free_gb <= 0:
+        return True, 0, "disabled"
+    probe = target_dir
+    while not probe.exists() and probe != probe.parent:
+        probe = probe.parent
+    try:
+        free = shutil.disk_usage(probe).free
+    except OSError as exc:
+        return False, 0, f"Cannot check disk headroom on {probe}: {exc}"
+    required = int(min_free_gb * (1024 ** 3))
+    if free < required:
+        return (
+            False,
+            free,
+            f"Insufficient free disk space on {probe}: {human_bytes(free)} available < {min_free_gb:g} GiB required (min_free_disk_gb). Refusing to write Vault/bundle.",
+        )
+    return True, free, "ok"
+
+
+def is_shallow_repo(repo: str) -> bool:
+    """Return True if repo is a shallow clone (single-branch bundles may omit history)."""
+    proc = run_git(repo, ["rev-parse", "--is-shallow-repository"])
+    return proc.returncode == 0 and proc.stdout.strip().lower() == "true"
+
+
 class VaultManager:
-    """Manages hardened recovery snapshots (bundles via temp ref + dirty diffs + untracked tar) and append-only receipts."""
+    """Manages hardened recovery snapshots (per-repo aggregated bundles via --stdin + verify, dirty diffs, untracked tar) and receipts."""
 
     def __init__(self, state_dir: Path) -> None:
         self.state_dir = state_dir
@@ -1799,6 +1902,156 @@ class VaultManager:
             manifest.setdefault("dirty_snapshots", [])
         return manifest_path, manifest
 
+    def _verify_bundle(self, repo: str, bundle_path: Path, expected_refs: Dict[str, str]) -> Tuple[bool, str]:
+        vproc = run_git(repo, ["bundle", "verify", str(bundle_path)])
+        if vproc.returncode != 0:
+            err_msg = vproc.stderr.strip() or vproc.stdout.strip() or "unknown error"
+            return False, f"git bundle verify failed: {err_msg}"
+        lproc = run_git(repo, ["bundle", "list-heads", str(bundle_path)])
+        if lproc.returncode != 0:
+            return False, f"git bundle list-heads failed: {lproc.stderr.strip()}"
+        actual: Dict[str, str] = {}
+        for ln in lproc.stdout.splitlines():
+            parts = ln.strip().split()
+            if len(parts) >= 2:
+                actual[parts[1]] = parts[0]
+        for ref, sha in expected_refs.items():
+            if ref not in actual or (sha and actual[ref] != sha):
+                return False, f"bundle verification mismatch for {ref}"
+        return True, "ok"
+
+    def archive_repo_batch(
+        self,
+        receipt_id: str,
+        repo: str,
+        items: List[Dict[str, Any]],
+        min_free_gb: float = 5.0,
+        allow_shallow_vault: bool = False,
+    ) -> Tuple[Dict[str, Dict[str, Any]], List[str]]:
+        """Aggregate all refs/commits to archive for one repository into a single multi-ref .bundle."""
+        if not items:
+            return {}, []
+
+        ok_disk, _, disk_msg = check_disk_headroom(self.vault_root, min_free_gb)
+        if not ok_disk:
+            return {}, [disk_msg]
+
+        if not allow_shallow_vault and is_shallow_repo(repo):
+            return {}, [
+                f"Refused vault archive for shallow repository {repo}: unshallow first or pass --allow-shallow-vault"
+            ]
+
+        vdir = self.vault_root / receipt_id
+        vdir.mkdir(parents=True, exist_ok=True)
+        rhash = short_hash(repo)
+        bundle_name = f"{rhash}-vault.bundle"
+        bundle_path = vdir / bundle_name
+        if bundle_path.exists():
+            bundle_name = f"{rhash}-vault-{uuid.uuid4().hex[:6]}.bundle"
+            bundle_path = vdir / bundle_name
+
+        created_tmp_refs: List[str] = []
+        refs_to_pack: List[str] = []
+        seen_pack_refs: Set[str] = set()
+        expected_refs: Dict[str, str] = {}
+        resolved_items: List[Dict[str, Any]] = []
+        batch_errors: List[str] = []
+
+        try:
+            for idx, item in enumerate(items):
+                key = str(item["key"])
+                branch_label = str(item["branch_label"])
+                sha = str(item.get("sha") or "")
+                merge_status = str(item.get("merge_status") or "unmerged")
+                worktree_path = item.get("worktree_path")
+                ref_exists = bool(item.get("ref_exists", True))
+
+                bundle_ref = ""
+                if ref_exists:
+                    cand_ref = f"refs/heads/{branch_label}"
+                    sr = run_git(repo, ["show-ref", "--verify", cand_ref])
+                    if sr.returncode == 0 and sr.stdout.strip():
+                        actual_sha = sr.stdout.strip().split()[0]
+                        if not sha or actual_sha == sha:
+                            bundle_ref = cand_ref
+                            sha = actual_sha
+
+                if not bundle_ref:
+                    if not sha:
+                        batch_errors.append(f"{repo}:{branch_label}: missing commit SHA for vault archive")
+                        continue
+                    tmp_ref = f"refs/fbk-vault/{receipt_id}-{idx}-{sha[:8]}-{uuid.uuid4().hex[:4]}"
+                    up = run_git(repo, ["update-ref", tmp_ref, sha], readonly=False)
+                    if up.returncode != 0:
+                        batch_errors.append(f"{repo}:{branch_label}: failed creating temp vault ref: {up.stderr.strip()}")
+                        continue
+                    created_tmp_refs.append(tmp_ref)
+                    bundle_ref = tmp_ref
+
+                if bundle_ref not in seen_pack_refs:
+                    seen_pack_refs.add(bundle_ref)
+                    refs_to_pack.append(bundle_ref)
+                    expected_refs[bundle_ref] = sha
+                resolved_items.append(
+                    {
+                        "key": key,
+                        "branch_label": branch_label,
+                        "sha": sha,
+                        "merge_status": merge_status,
+                        "worktree_path": worktree_path,
+                        "bundle_ref": bundle_ref,
+                    }
+                )
+
+            if not resolved_items:
+                return {}, batch_errors or [f"{repo}: no valid refs resolved for vault bundle"]
+
+            bproc = subprocess.run(
+                ["git", "-C", repo, "bundle", "create", str(bundle_path), "--stdin"],
+                input="\n".join(refs_to_pack) + "\n",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            if bproc.returncode != 0:
+                if bundle_path.exists():
+                    bundle_path.unlink(missing_ok=True)
+                batch_errors.append(f"{repo}: git bundle create --stdin failed: {bproc.stderr.strip()}")
+                return {}, batch_errors
+
+            v_ok, v_msg = self._verify_bundle(repo, bundle_path, expected_refs)
+            if not v_ok:
+                if bundle_path.exists():
+                    bundle_path.unlink(missing_ok=True)
+                batch_errors.append(f"{repo}: {v_msg}")
+                return {}, batch_errors
+        finally:
+            for tmp_ref in created_tmp_refs:
+                run_git(repo, ["update-ref", "-d", tmp_ref], readonly=False)
+
+        archived_at = now_utc_iso()
+        manifest_path, manifest = self._load_or_init_manifest(vdir, receipt_id)
+        archived_by_key: Dict[str, Dict[str, Any]] = {}
+        for ritem in resolved_items:
+            entry = {
+                "repo": repo,
+                "repo_hash": rhash,
+                "branch": ritem["branch_label"],
+                "sha": ritem["sha"],
+                "merge_status": ritem["merge_status"],
+                "worktree_path": ritem["worktree_path"],
+                "bundle": bundle_name,
+                "bundle_ref": ritem["bundle_ref"],
+                "archived_at": archived_at,
+            }
+            manifest["entries"].append(entry)
+            archived_by_key[ritem["key"]] = entry
+        with open(manifest_path, "w", encoding="utf-8") as fh:
+            json.dump(manifest, fh, indent=2, ensure_ascii=False)
+        return archived_by_key, batch_errors
+
     def archive_ref_or_sha(
         self,
         receipt_id: str,
@@ -1808,51 +2061,26 @@ class VaultManager:
         merge_status: str,
         worktree_path: Optional[str] = None,
         ref_exists: bool = True,
+        min_free_gb: float = 5.0,
+        allow_shallow_vault: bool = False,
     ) -> Optional[Dict[str, Any]]:
-        vdir = self.vault_root / receipt_id
-        vdir.mkdir(parents=True, exist_ok=True)
-        rhash = short_hash(repo)
-        safe_b = re.sub(r"[^A-Za-z0-9._-]+", "_", branch_label)
-        bundle_name = f"{rhash}-{safe_b}-{sha[:8]}.bundle"
-        bundle_path = vdir / bundle_name
-
-        bundle_ref = f"refs/heads/{branch_label}" if ref_exists else ""
-        created_ok = False
-        if ref_exists:
-            proc = run_git(repo, ["bundle", "create", str(bundle_path), bundle_ref], readonly=False)
-            created_ok = proc.returncode == 0
-
-        if not created_ok:
-            tmp_ref = f"refs/fbk-tmp/{receipt_id}-{uuid.uuid4().hex[:6]}"
-            up = run_git(repo, ["update-ref", tmp_ref, sha], readonly=False)
-            if up.returncode == 0:
-                try:
-                    proc2 = run_git(repo, ["bundle", "create", str(bundle_path), tmp_ref], readonly=False)
-                    if proc2.returncode == 0:
-                        bundle_ref = tmp_ref
-                        created_ok = True
-                finally:
-                    run_git(repo, ["update-ref", "-d", tmp_ref], readonly=False)
-
-        if not created_ok:
-            return None
-
-        entry = {
-            "repo": repo,
-            "repo_hash": rhash,
-            "branch": branch_label,
-            "sha": sha,
-            "merge_status": merge_status,
-            "worktree_path": worktree_path,
-            "bundle": bundle_name,
-            "bundle_ref": bundle_ref,
-            "archived_at": now_utc_iso(),
-        }
-        manifest_path, manifest = self._load_or_init_manifest(vdir, receipt_id)
-        manifest["entries"].append(entry)
-        with open(manifest_path, "w", encoding="utf-8") as fh:
-            json.dump(manifest, fh, indent=2, ensure_ascii=False)
-        return entry
+        archived_map, _ = self.archive_repo_batch(
+            receipt_id,
+            repo,
+            [
+                {
+                    "key": branch_label,
+                    "branch_label": branch_label,
+                    "sha": sha,
+                    "merge_status": merge_status,
+                    "worktree_path": worktree_path,
+                    "ref_exists": ref_exists,
+                }
+            ],
+            min_free_gb=min_free_gb,
+            allow_shallow_vault=allow_shallow_vault,
+        )
+        return archived_map.get(branch_label)
 
     def archive_branch(
         self,
@@ -1862,9 +2090,19 @@ class VaultManager:
         sha: str,
         merge_status: str,
         worktree_path: Optional[str] = None,
+        min_free_gb: float = 5.0,
+        allow_shallow_vault: bool = False,
     ) -> Optional[Dict[str, Any]]:
         return self.archive_ref_or_sha(
-            receipt_id, repo, branch, sha, merge_status, worktree_path=worktree_path, ref_exists=True
+            receipt_id,
+            repo,
+            branch,
+            sha,
+            merge_status,
+            worktree_path=worktree_path,
+            ref_exists=True,
+            min_free_gb=min_free_gb,
+            allow_shallow_vault=allow_shallow_vault,
         )
 
     def archive_dirty_worktree(
@@ -1873,7 +2111,11 @@ class VaultManager:
         repo: str,
         wt_path: str,
         tag: str,
+        min_free_gb: float = 5.0,
     ) -> Optional[Dict[str, Any]]:
+        ok_disk, _, _ = check_disk_headroom(self.vault_root, min_free_gb)
+        if not ok_disk:
+            return None
         vdir = self.vault_root / receipt_id
         vdir.mkdir(parents=True, exist_ok=True)
         rhash = short_hash(f"{repo}:{wt_path}")
@@ -2126,6 +2368,8 @@ def execute_clean(
     apply: bool,
     run_gc: bool,
     allow_without_proc_check: bool = False,
+    min_free_gb: float = 5.0,
+    allow_shallow_vault: bool = False,
 ) -> Dict[str, Any]:
     plan = build_plan(scan, target_tiers, allow_review)
     vault = VaultManager(state_dir)
@@ -2159,29 +2403,95 @@ def execute_clean(
     touched_repos: Set[str] = set()
     removed_wt_paths: Set[str] = set()
     vault_entries: List[Dict[str, Any]] = []
+    pre_archived: Dict[Tuple[str, str], Dict[str, Any]] = {}
+
+    if apply:
+        planned_rm_wts = {act["path"] for act in plan["actions"] if act["action"] == "remove_worktree"}
+        needs_dirty_snap = False
+        repo_vault_batches: Dict[str, List[Dict[str, Any]]] = {}
+
+        for act in plan["actions"]:
+            if act["action"] == "remove_worktree":
+                wt = wt_lookup[act["path"]]
+                if wt.dirty and allow_dirty and os.path.isdir(wt.path):
+                    needs_dirty_snap = True
+                if wt.detached and wt.head_sha and wt.repo and "clean_detached_worktree_merged" not in wt.reasons:
+                    repo_vault_batches.setdefault(wt.repo, []).append(
+                        {
+                            "key": f"detached:{wt.path}",
+                            "branch_label": f"detached-{os.path.basename(wt.path)}",
+                            "sha": wt.head_sha,
+                            "merge_status": "detached_unmerged",
+                            "worktree_path": wt.path,
+                            "ref_exists": False,
+                        }
+                    )
+            elif act["action"] == "delete_branch":
+                br = br_lookup[(act["repo"], act["branch"])]
+                if br.attached_worktree and br.attached_worktree not in planned_rm_wts and os.path.exists(br.attached_worktree):
+                    continue
+                if br.merge_status != "merged":
+                    repo_vault_batches.setdefault(br.repo, []).append(
+                        {
+                            "key": f"branch:{br.name}",
+                            "branch_label": br.name,
+                            "sha": br.sha,
+                            "merge_status": br.merge_status,
+                            "worktree_path": br.attached_worktree,
+                            "ref_exists": True,
+                        }
+                    )
+
+        if needs_dirty_snap or repo_vault_batches:
+            ok_disk, _, disk_msg = check_disk_headroom(vault.vault_root, min_free_gb)
+            if not ok_disk:
+                return {
+                    "receipt_id": receipt_id,
+                    "command": "clean",
+                    "timestamp": now_utc_iso(),
+                    "apply": False,
+                    "target": scan.target,
+                    "tiers": sorted(target_tiers),
+                    "executed": [],
+                    "skipped_count": len(plan["skipped"]),
+                    "errors": [disk_msg],
+                    "freed_bytes": 0,
+                    "freed_human": "0 B",
+                    "vault_dir": None,
+                    "vault_entries": [],
+                }
+
+        for repo in sorted(repo_vault_batches.keys()):
+            archived_map, batch_errs = vault.archive_repo_batch(
+                receipt_id,
+                repo,
+                repo_vault_batches[repo],
+                min_free_gb=min_free_gb,
+                allow_shallow_vault=allow_shallow_vault,
+            )
+            for k, entry in archived_map.items():
+                pre_archived[(repo, k)] = entry
+                vault_entries.append(entry)
+            errors.extend(batch_errs)
 
     for act in plan["actions"]:
         if act["action"] == "remove_worktree":
             wt = wt_lookup[act["path"]]
             if apply and wt.dirty and allow_dirty and os.path.isdir(wt.path):
-                snap = vault.archive_dirty_worktree(receipt_id, wt.repo or wt.path, wt.path, os.path.basename(wt.path))
+                snap = vault.archive_dirty_worktree(
+                    receipt_id,
+                    wt.repo or wt.path,
+                    wt.path,
+                    os.path.basename(wt.path),
+                    min_free_gb=min_free_gb,
+                )
                 if snap:
                     vault_entries.append(snap)
-            # Archive unmerged detached HEAD before deleting Tier 2 detached worktree
+            # Ensure unmerged detached HEAD was verified and archived before deleting Tier 2 detached worktree
             if apply and wt.detached and wt.head_sha and wt.repo and "clean_detached_worktree_merged" not in wt.reasons:
-                d_entry = vault.archive_ref_or_sha(
-                    receipt_id,
-                    wt.repo,
-                    f"detached-{os.path.basename(wt.path)}",
-                    wt.head_sha,
-                    "detached_unmerged",
-                    worktree_path=wt.path,
-                    ref_exists=False,
-                )
-                if d_entry is None:
+                if (wt.repo, f"detached:{wt.path}") not in pre_archived:
                     errors.append(f"worktree {wt.path}: failed to archive detached HEAD {wt.head_sha} to vault; aborted")
                     continue
-                vault_entries.append(d_entry)
 
             ok, msg, freed = remove_worktree_safe(wt, apply=apply, allow_dirty=allow_dirty)
             if ok:
@@ -2218,11 +2528,9 @@ def execute_clean(
         if apply:
             archived_already = False
             if br.merge_status != "merged":
-                entry = vault.archive_branch(receipt_id, br.repo, br.name, br.sha, br.merge_status, br.attached_worktree)
-                if entry is None:
+                if (br.repo, f"branch:{br.name}") not in pre_archived:
                     errors.append(f"branch {br.name}: failed to archive to recovery vault; aborted deletion")
                     continue
-                vault_entries.append(entry)
                 archived_already = True
 
             if br.merge_status == "merged":
@@ -2230,13 +2538,28 @@ def execute_clean(
                 if dproc.returncode != 0:
                     # Never force-delete -D without first archiving to Recovery Vault (P0-3)
                     if not archived_already:
-                        entry = vault.archive_branch(
-                            receipt_id, br.repo, br.name, br.sha, "merged_force_fallback", br.attached_worktree
+                        fb_map, fb_errs = vault.archive_repo_batch(
+                            receipt_id,
+                            br.repo,
+                            [
+                                {
+                                    "key": f"branch:{br.name}",
+                                    "branch_label": br.name,
+                                    "sha": br.sha,
+                                    "merge_status": "merged_force_fallback",
+                                    "worktree_path": br.attached_worktree,
+                                    "ref_exists": True,
+                                }
+                            ],
+                            min_free_gb=min_free_gb,
+                            allow_shallow_vault=allow_shallow_vault,
                         )
-                        if entry is None:
-                            errors.append(f"branch {br.name}: `git branch -d` failed and vault archive failed; aborted")
+                        fb_entry = fb_map.get(f"branch:{br.name}")
+                        if fb_entry is None:
+                            err_detail = fb_errs[0] if fb_errs else "vault archive failed"
+                            errors.append(f"branch {br.name}: `git branch -d` failed and {err_detail}; aborted")
                             continue
-                        vault_entries.append(entry)
+                        vault_entries.append(fb_entry)
                     dproc = run_git(br.repo, ["branch", "-D", br.name], readonly=False)
             else:
                 dproc = run_git(br.repo, ["branch", "-D", br.name], readonly=False)
@@ -2435,11 +2758,33 @@ def cmd_close(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) ->
 
     freed_bytes = dir_size_bytes(wt_arg) if (wt_arg and os.path.isdir(wt_arg)) else 0
     vault_entries: List[Dict[str, Any]] = []
+    min_free_gb = (
+        args.min_free_gb
+        if getattr(args, "min_free_gb", None) is not None
+        else float(cfg.get("min_free_disk_gb", 5.0))
+    )
+    allow_shallow = bool(getattr(args, "allow_shallow_vault", False))
 
     if args.apply:
+        needs_vault_write = bool(
+            (branch_arg and merge_status != "merged")
+            or (wt_arg and os.path.isdir(wt_arg) and wt_detached and merge_status != "detached_merged" and sha)
+            or (wt_arg and os.path.isdir(wt_arg) and dirty and args.allow_dirty)
+        )
+        if needs_vault_write:
+            ok_disk, _, disk_msg = check_disk_headroom(vault.vault_root, min_free_gb)
+            if not ok_disk:
+                return 2, {"error": disk_msg}
+
         if wt_arg and os.path.isdir(wt_arg):
             if dirty and args.allow_dirty:
-                snap = vault.archive_dirty_worktree(receipt_id, repo_arg, wt_arg, os.path.basename(wt_arg))
+                snap = vault.archive_dirty_worktree(
+                    receipt_id,
+                    repo_arg,
+                    wt_arg,
+                    os.path.basename(wt_arg),
+                    min_free_gb=min_free_gb,
+                )
                 if snap:
                     vault_entries.append(snap)
             if wt_detached and merge_status != "detached_merged" and sha:
@@ -2451,6 +2796,8 @@ def cmd_close(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) ->
                     merge_status,
                     worktree_path=wt_arg,
                     ref_exists=False,
+                    min_free_gb=min_free_gb,
+                    allow_shallow_vault=allow_shallow,
                 )
                 if d_entry is None:
                     return 2, {"error": f"Failed to archive detached HEAD {sha} into vault; close aborted"}
@@ -2464,7 +2811,16 @@ def cmd_close(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) ->
 
         if branch_arg:
             if merge_status != "merged":
-                entry = vault.archive_branch(receipt_id, repo_arg, branch_arg, sha, merge_status, wt_arg)
+                entry = vault.archive_branch(
+                    receipt_id,
+                    repo_arg,
+                    branch_arg,
+                    sha,
+                    merge_status,
+                    wt_arg,
+                    min_free_gb=min_free_gb,
+                    allow_shallow_vault=allow_shallow,
+                )
                 if entry is None:
                     return 2, {"error": f"Failed to archive '{branch_arg}' into vault; branch deletion aborted"}
                 vault_entries.append(entry)
@@ -2472,7 +2828,16 @@ def cmd_close(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) ->
             else:
                 del_proc = run_git(repo_arg, ["branch", "-d", branch_arg], readonly=False)
                 if del_proc.returncode != 0:
-                    entry = vault.archive_branch(receipt_id, repo_arg, branch_arg, sha, "merged_force_fallback", wt_arg)
+                    entry = vault.archive_branch(
+                        receipt_id,
+                        repo_arg,
+                        branch_arg,
+                        sha,
+                        "merged_force_fallback",
+                        wt_arg,
+                        min_free_gb=min_free_gb,
+                        allow_shallow_vault=allow_shallow,
+                    )
                     if entry is None:
                         return 2, {"error": f"Failed -d and vault archive for '{branch_arg}'; aborted"}
                     vault_entries.append(entry)
@@ -2729,15 +3094,20 @@ def cmd_repair_alternates(args: argparse.Namespace, state_dir: Path) -> Tuple[in
     return (1 if (errors or has_refusal) else 0), receipt
 
 
-def cmd_prune_remotes(args: argparse.Namespace, state_dir: Path) -> Tuple[int, Dict[str, Any]]:
+def cmd_prune_remotes(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) -> Tuple[int, Dict[str, Any]]:
     _, target, primary_repos, _, _, errors = discover_targets(args.repo, args.root, max_depth=3)
     vault = VaultManager(state_dir)
     receipt_id = vault.new_receipt_id()
     actions: List[Dict[str, Any]] = []
+    prot_remote_res = [re.compile(p) for p in cfg.get("protected_remote_patterns", [])]
+    dedupe_canonical = bool(getattr(args, "dedupe_canonical", False))
 
     for repo in primary_repos:
         _, _, _, non_canonical, remote_ref_count = inspect_repo_remotes(repo)
+        remotes_map = get_repo_remotes_map(repo)
         removed_in_repo = 0
+        planned_names: Set[str] = set()
+
         for rem in non_canonical:
             r_name = rem["name"]
             r_url = rem["url"]
@@ -2745,8 +3115,11 @@ def cmd_prune_remotes(args: argparse.Namespace, state_dir: Path) -> Tuple[int, D
             if r_name == "origin":
                 if not (args.include_broken_origin and r_kind in ("tmp_or_artifact", "broken_local")):
                     continue
-            if r_kind == "local_clone" and not args.include_local_clones:
-                continue
+            if r_kind == "local_clone":
+                if not args.include_local_clones:
+                    continue
+                if any(rx.search(r_name) for rx in prot_remote_res):
+                    continue
 
             status = "dry_run"
             if args.apply:
@@ -2756,6 +3129,7 @@ def cmd_prune_remotes(args: argparse.Namespace, state_dir: Path) -> Tuple[int, D
                     continue
                 removed_in_repo += 1
                 status = "removed"
+            planned_names.add(r_name)
             actions.append(
                 {
                     "repo": repo,
@@ -2766,6 +3140,50 @@ def cmd_prune_remotes(args: argparse.Namespace, state_dir: Path) -> Tuple[int, D
                     "status": status,
                 }
             )
+
+        if dedupe_canonical:
+            canon_groups: Dict[str, List[Tuple[str, str]]] = {}
+            for r_name, r_url in sorted(remotes_map.items()):
+                if r_name in planned_names:
+                    continue
+                if classify_remote_url(r_url) != "canonical_remote":
+                    continue
+                norm_url = normalize_canonical_remote_url(r_url)
+                canon_groups.setdefault(norm_url, []).append((r_name, r_url))
+
+            for norm_url, members in sorted(canon_groups.items()):
+                if len(members) <= 1:
+                    continue
+                names = [m[0] for m in members]
+                protected_in_group = [
+                    n for n in sorted(names) if n == "origin" or any(rx.search(n) for rx in prot_remote_res)
+                ]
+                keep_set = set(protected_in_group) if protected_in_group else {sorted(names)[0]}
+                primary_kept = "origin" if "origin" in keep_set else sorted(keep_set)[0]
+                for r_name, r_url in members:
+                    if r_name in keep_set:
+                        continue
+                    status = "dry_run"
+                    if args.apply:
+                        proc = run_git(repo, ["remote", "remove", r_name], readonly=False)
+                        if proc.returncode != 0:
+                            errors.append(f"{repo}: failed to remove duplicate remote '{r_name}': {proc.stderr.strip()}")
+                            continue
+                        removed_in_repo += 1
+                        status = "removed"
+                    actions.append(
+                        {
+                            "repo": repo,
+                            "remote": r_name,
+                            "url": r_url,
+                            "kind": "duplicate_canonical",
+                            "kept_remote": primary_kept,
+                            "canonical_url": norm_url,
+                            "repo_remote_refs_before": remote_ref_count,
+                            "status": status,
+                        }
+                    )
+
         if args.apply and removed_in_repo > 0 and not args.no_pack_refs:
             run_git(repo, ["pack-refs", "--all", "--prune"], readonly=False)
 
@@ -2822,14 +3240,39 @@ def cmd_cutover_bundle(args: argparse.Namespace, cfg: Dict[str, Any], state_dir:
     vault = VaultManager(state_dir)
     receipt_id = vault.new_receipt_id()
 
+    min_free_gb = (
+        args.min_free_gb
+        if getattr(args, "min_free_gb", None) is not None
+        else float(cfg.get("min_free_disk_gb", 5.0))
+    )
+
     if args.apply:
+        if selected:
+            ok_disk, _, disk_msg = check_disk_headroom(out_dir, min_free_gb)
+            if not ok_disk:
+                return 2, {"error": disk_msg}
         out_dir.mkdir(parents=True, exist_ok=True)
         bundle_created = False
         if selected:
             refs_to_pack = [f"refs/heads/{b['name']}" for b in selected]
-            bproc = run_git(repo, ["bundle", "create", str(bundle_path)] + refs_to_pack, readonly=False)
+            bproc = subprocess.run(
+                ["git", "-C", repo, "bundle", "create", str(bundle_path), "--stdin"],
+                input="\n".join(refs_to_pack) + "\n",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
             if bproc.returncode != 0:
+                if bundle_path.exists():
+                    bundle_path.unlink(missing_ok=True)
                 return 2, {"error": f"git bundle create failed: {bproc.stderr.strip()}"}
+            vproc = run_git(repo, ["bundle", "verify", str(bundle_path)])
+            if vproc.returncode != 0:
+                if bundle_path.exists():
+                    bundle_path.unlink(missing_ok=True)
+                return 2, {"error": f"git bundle verify failed: {vproc.stderr.strip()}"}
             bundle_created = True
 
         manifest = {
@@ -2902,7 +3345,17 @@ def cmd_audit_remote(args: argparse.Namespace, cfg: Dict[str, Any]) -> Tuple[int
         if fproc.returncode != 0:
             return 2, {"error": f"git fetch --prune {remote} failed: {fproc.stderr.strip()}"}
 
-    prot_res = [re.compile(p) for p in cfg.get("protected_branch_patterns", [])]
+    prot_patterns = list(cfg.get("protected_branch_patterns", [])) + list(
+        cfg.get(
+            "remote_protected_branch_patterns",
+            [
+                "^(main|master|develop|dev|prd|prod|test|qa|stage|staging|next)$",
+                "^release/.*",
+                "^prod.*",
+            ],
+        )
+    )
+    prot_res = [re.compile(p) for p in prot_patterns]
     stale_days = args.stale_days if args.stale_days is not None else int(cfg.get("remote_audit_stale_days", 30))
     recent_days = args.recent_days if args.recent_days is not None else int(cfg.get("remote_audit_recent_days", 14))
     now_ts = int(time.time())
@@ -2923,7 +3376,7 @@ def cmd_audit_remote(args: argparse.Namespace, cfg: Dict[str, Any]) -> Tuple[int
         repo,
         [
             "for-each-ref",
-            "--format=%(refname:short)\t%(objectname)\t%(committerdate:unix)\t%(authorname)",
+            "--format=%(refname:short)\t%(objectname)\t%(committerdate:unix)\t%(authorname)\t%(symref)",
             f"refs/remotes/{remote}/",
         ],
     )
@@ -2949,9 +3402,12 @@ def cmd_audit_remote(args: argparse.Namespace, cfg: Dict[str, Any]) -> Tuple[int
         if len(parts) < 3:
             continue
         full_short = parts[0]
-        if full_short == f"{remote}/HEAD":
+        symref = parts[4].strip() if len(parts) > 4 else ""
+        if symref or full_short == remote or full_short == f"{remote}/HEAD" or not full_short.startswith(prefix):
             continue
-        short_name = full_short[len(prefix) :] if full_short.startswith(prefix) else full_short
+        short_name = full_short[len(prefix) :]
+        if short_name == "HEAD":
+            continue
         sha = parts[1]
         cts = int(parts[2] or 0)
         author = parts[3] if len(parts) > 3 else ""
@@ -4053,6 +4509,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_clean.add_argument("--allow-review", action="store_true", help="Required to clean Tier 2 items")
     p_clean.add_argument("--allow-dirty", action="store_true", help="Allow removing dirty Tier 2 worktrees (archives diff+untracked to vault)")
     p_clean.add_argument("--allow-without-proc-check", action="store_true", help="Override fail-closed lsof check if lsof is unavailable")
+    p_clean.add_argument("--min-free-gb", type=float, default=None, help="Fail-closed minimum free disk GiB before writing vault (0 disables)")
+    p_clean.add_argument("--allow-shallow-vault", action="store_true", help="Allow vault bundle creation even for shallow clones")
     p_clean.add_argument("--gc", action="store_true", help="Run git worktree prune + git gc --auto on touched repos")
     p_clean.add_argument("--apply", action="store_true", help="Actually execute deletions (otherwise dry-run)")
 
@@ -4072,6 +4530,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_close.add_argument("--force-unmerged", action="store_true", help="Allow closing unmerged branch/detached HEAD (archives bundle to vault first)")
     p_close.add_argument("--allow-dirty", action="store_true", help="Allow closing dirty worktree (archives diff+untracked to vault first)")
     p_close.add_argument("--allow-without-proc-check", action="store_true", help="Override fail-closed lsof check")
+    p_close.add_argument("--min-free-gb", type=float, default=None, help="Fail-closed minimum free disk GiB before writing vault (0 disables)")
+    p_close.add_argument("--allow-shallow-vault", action="store_true", help="Allow vault bundle creation even for shallow clones")
     p_close.add_argument("--apply", action="store_true", help="Actually execute close (otherwise dry-run)")
     p_close.add_argument("--state-dir", default=os.environ.get("FBK_STATE_DIR", DEFAULT_STATE_DIR))
     p_close.add_argument("--config", help="Optional config JSON")
@@ -4095,11 +4555,12 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_alt.add_argument("--config", help="Optional config JSON")
     p_alt.add_argument("--format", choices=["text", "json"], default="text")
 
-    p_pr = sub.add_parser("prune-remotes", help="Remove non-canonical local/tmp/broken remotes and pack refs")
+    p_pr = sub.add_parser("prune-remotes", help="Remove non-canonical or duplicate canonical remotes and pack refs")
     p_pr.add_argument("--repo", help="Target single git repo")
     p_pr.add_argument("--root", help="Target workspace root")
     p_pr.add_argument("--include-local-clones", action="store_true", help="Also prune non-origin remotes pointing to existing local dirs")
     p_pr.add_argument("--include-broken-origin", action="store_true", help="Allow pruning broken/tmp 'origin' remote")
+    p_pr.add_argument("--dedupe-canonical", action="store_true", help="Deduplicate redundant alias remotes pointing to the same canonical URL")
     p_pr.add_argument("--no-pack-refs", action="store_true", help="Skip git pack-refs --all --prune")
     p_pr.add_argument("--apply", action="store_true", help="Actually remove eligible remotes")
     p_pr.add_argument("--state-dir", default=os.environ.get("FBK_STATE_DIR", DEFAULT_STATE_DIR))
@@ -4110,6 +4571,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_cb.add_argument("--repo", required=True, help="Target repository path")
     p_cb.add_argument("--out-dir", help="Output directory for bundle and manifest")
     p_cb.add_argument("--all-local", action="store_true", help="Include all local refs/heads/* instead of only unpushed branches")
+    p_cb.add_argument("--min-free-gb", type=float, default=None, help="Fail-closed minimum free disk GiB before writing bundle (0 disables)")
     p_cb.add_argument("--apply", action="store_true", help="Actually write bundle and manifest")
     p_cb.add_argument("--state-dir", default=os.environ.get("FBK_STATE_DIR", DEFAULT_STATE_DIR))
     p_cb.add_argument("--config", help="Optional config JSON")
@@ -4234,7 +4696,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         return rc
 
     if args.command == "prune-remotes":
-        rc, payload = cmd_prune_remotes(args, state_dir)
+        rc, payload = cmd_prune_remotes(args, cfg, state_dir)
         if args.format == "json":
             print(json.dumps(payload, indent=2, ensure_ascii=False))
         else:
@@ -4398,6 +4860,11 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.command == "clean":
         tiers = parse_tiers(args.tier)
+        min_free_gb = (
+            args.min_free_gb
+            if getattr(args, "min_free_gb", None) is not None
+            else float(cfg.get("min_free_disk_gb", 5.0))
+        )
         receipt = execute_clean(
             scan,
             state_dir=state_dir,
@@ -4407,6 +4874,8 @@ def main(argv: Optional[List[str]] = None) -> int:
             apply=args.apply,
             run_gc=args.gc,
             allow_without_proc_check=args.allow_without_proc_check,
+            min_free_gb=min_free_gb,
+            allow_shallow_vault=args.allow_shallow_vault,
         )
         if args.format == "json":
             print(json.dumps(receipt, indent=2, ensure_ascii=False))

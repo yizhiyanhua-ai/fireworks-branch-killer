@@ -1,6 +1,6 @@
 {
   "name": "@yizhiyanhua-ai/fireworks-branch-killer",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Zero-dependency deterministic Git worktree and feature-branch hygiene engine and multi-harness AI Agent Skill.",
   "keywords": [
     "claude-code",

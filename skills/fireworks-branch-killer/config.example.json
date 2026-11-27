@@ -1,9 +1,21 @@
 {
   "grace_period_hours": 24,
+  "min_free_disk_gb": 5.0,
   "protected_branch_patterns": [
     "^(main|master|develop|dev)$",
     "^release/.*",
     "^prod.*"
+  ],
+  "remote_protected_branch_patterns": [
+    "^(main|master|develop|dev|prd|prod|test|qa|stage|staging|next)$",
+    "^release/.*",
+    "^prod.*"
+  ],
+  "protected_remote_patterns": [
+    "^origin$",
+    "^upstream$",
+    "^prod[-_].*",
+    ".*anchor.*"
   ],
   "protected_path_patterns": [],
   "vault_retention_days": 7,
