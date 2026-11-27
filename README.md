@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Python-3.9%2B%20Zero--Deps-3776AB" alt="Python 3.9+ Zero-Deps" />
   <img src="https://img.shields.io/badge/Harnesses-7%20Supported-10a37f" alt="7 Harnesses Supported" />
   <img src="https://img.shields.io/badge/Safety-4--Tier%20Fail--Closed-d97757" alt="4-Tier Fail-Closed" />
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-25%20Sandbox%20Tests-22c55e" alt="25 Sandbox Tests" /></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-28%20Sandbox%20Tests-22c55e" alt="28 Sandbox Tests" /></a>
 </p>
 
 ---
@@ -105,9 +105,20 @@ python3 scripts/fbk.py install --target all --scope global --apply
 
 ---
 
-## Quick Start & Command Playbook
+## Quick Start & Dual-Track Usage (Natural Language + CLI)
 
-Ask your AI coding agent naturally (*"Audit stale worktrees with fbk"*, *"Close this merged branch worktree"*, *"Slim node_modules in idle worktrees"*) or invoke the CLI directly:
+After installing the skill, you never need to memorize flags—just speak naturally inside **Claude Code / Codex / AGY / Amp**, or invoke the deterministic CLI directly:
+
+| Goal | Ask Your Agent Naturally | Or Run Directly via CLI |
+| :--- | :--- | :--- |
+| **Evolving workspace checkup** | *"Run fbk doctor on this repo and check my space-saving tips"* | `fbk doctor --root .` |
+| **View living local playbook** | *"Show my evolving fbk space-saving playbook"* | `fbk doctor --show-playbook` |
+| **Record a new custom lesson** | *"Save a lesson in fbk doctor: clear .next/cache weekly"* | `fbk doctor --root . --learn "Clear .next/cache weekly" --stack js-ts` |
+| **Keep code, slim idle caches** | *"Use fbk to slim node_modules/.next/target in idle worktrees"* | `fbk slim --root . --apply` |
+| **Close a merged PR worktree** | *"PR merged—close this worktree and branch with fbk"* | `fbk close --worktree ./wt-feat --apply` |
+| **Batch Tier-0 cleanup / restore** | *"Preview Tier-0 cleanup with fbk"* / *"Restore last deleted branch"* | `fbk clean --root . --tier 0 --apply` / `fbk restore <id> --apply` |
+
+*(Or prepend `python3 scripts/fbk.py` if `~/.local/bin/fbk` is not in `PATH`, or run ad-hoc via `npx -y github:yizhiyanhua-ai/fireworks-branch-killer ...`.)*
 
 ### 1. Read-Only Multi-Repo Audit (`scan` & `plan`)
 ```bash
@@ -157,6 +168,23 @@ python3 scripts/fbk.py audit-remote --repo /path/to/repo
 python3 scripts/fbk.py restore --list
 python3 scripts/fbk.py restore <receipt_id> --apply
 ```
+
+---
+
+## Root-Cause Space-Saving Tips (Full-Stack Prevention)
+
+Cleaning merged worktrees (`close`/`clean`) and trimming idle caches (`slim`) solves accumulated bloat—combining `fbk` with **root-cause deduplication** prevents new worktrees from copying gigabytes of dependencies upfront.
+
+`fbk doctor --root .` is **dynamically self-evolving**: every run inspects your real stacks (including sampling `st_nlink > 1` hardlinks vs exclusive `.next/cache` / `target/` hogs), clears warnings you fixed into **Resolved Wins**, ingests real cleanup savings from `clean`/`slim`/`close`, and maintains a personal `<state_dir>/playbook.md` without dirtying your Git checkout (`--learn` adds custom lessons, `--show-playbook` prints it, `--no-evolve` stays strictly read-only). Full guide: [references/space-saving-tips.md](references/space-saving-tips.md):
+
+| Stack / Layer | Root-Cause Pattern | Key Gotcha & `fbk` Synergy |
+| :--- | :--- | :--- |
+| **Claude Code** | `worktree.symlinkDirectories: ["node_modules", ".cache"]` | Remove trailing `/` in `.gitignore` (`node_modules`, **not** `node_modules/`), or `git add` stages symlinks! `fbk slim` skips symlinks (`follow_symlinks=False`) safely. |
+| **JS / TS (`pnpm` / `bun`)** | `virtualStoreType: global` in `pnpm-workspace.yaml` / `bun` APFS CoW | **Hardlink trap**: standard `pnpm` hardlinks `node_modules` to global store—deleting a worktree alone barely frees physical disk until you run `pnpm store prune`; real exclusive hogs are `target/` & `.next/cache`. |
+| **Browser E2E / QA** | Global `PLAYWRIGHT_BROWSERS_PATH`, `PUPPETEER_CACHE_DIR`, `CYPRESS_CACHE_FOLDER` | Avoids 400MB–1.2GB browser copies; set `trace`/`video: "retain-on-failure"`. |
+| **Python & AI / ML** | `uv` with `UV_LINK_MODE=clone` (macOS) + external `HF_HOME` / `TORCH_HOME` | Keep `UV_CACHE_DIR` on same volume so APFS `clone` works without full copies. |
+| **Rust** | `RUSTC_WRAPPER=sccache` (parallel) or `CARGO_TARGET_DIR` (serial) | Eliminates 5–20GB `target/` per worktree; let `fbk slim` trim idle targets. |
+| **Go / Mobile / Docker / Git** | Shared `GOMODCACHE` / `GRADLE_USER_HOME` / `DerivedData`, `docker compose down -v`, `git maintenance start` | Prefer `git worktree` over full `git clone`; use macOS `cp -cR` for zero-copy APFS duplicates. |
 
 ---
 

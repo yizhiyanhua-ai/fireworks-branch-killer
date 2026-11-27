@@ -1,53 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="fireworks-branch-killer logo">
-  <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0B1020"/>
-      <stop offset="55%" stop-color="#111936"/>
-      <stop offset="100%" stop-color="#1A132B"/>
-    </linearGradient>
-    <linearGradient id="trunk" x1="0%" y1="100%" x2="0%" y2="0%">
-      <stop offset="0%" stop-color="#0EA5E9"/>
-      <stop offset="100%" stop-color="#38BDF8"/>
-    </linearGradient>
-    <linearGradient id="spark" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FF5A36"/>
-      <stop offset="55%" stop-color="#FF9F1C"/>
-      <stop offset="100%" stop-color="#FFE066"/>
-    </linearGradient>
-    <linearGradient id="blade" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#F8FAFC"/>
-      <stop offset="100%" stop-color="#94A3B8"/>
-    </linearGradient>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none">
+  <!-- Swiss Kinetic Burst mark matching Option V3-2: parallel rounded branch bars sheared cleanly along a diagonal and bursting into an asymmetric radial firework arc -->
+  <g transform="translate(256 256)">
+    <!-- Four parallel rounded-end incoming branch strokes cleanly sheared at diagonal plane -->
+    <g fill="#FF5226">
+      <path d="M -154 22 L -68 -64 L -48 -44 L -134 42 A 14.14 14.14 0 1 1 -154 22 Z" />
+      <path d="M -154 68 L -34 -52 L -14 -32 L -134 88 A 14.14 14.14 0 1 1 -154 68 Z" />
+      <path d="M -118 118 L 0 0 L 20 20 L -98 138 A 14.14 14.14 0 1 1 -118 118 Z" />
+      <path d="M -72 154 L 34 48 L 54 68 L -52 174 A 14.14 14.14 0 1 1 -72 154 Z" />
+    </g>
 
-  <rect x="12" y="12" width="232" height="232" rx="52" fill="url(#bg)" stroke="#263357" stroke-width="3"/>
-
-  <!-- Protected main trunk -->
-  <path d="M 86 202 L 86 58" stroke="url(#trunk)" stroke-width="14" stroke-linecap="round"/>
-  <circle cx="86" cy="202" r="13" fill="#0B1020" stroke="#38BDF8" stroke-width="6"/>
-  <circle cx="86" cy="58" r="13" fill="#0B1020" stroke="#38BDF8" stroke-width="6"/>
-  <circle cx="86" cy="144" r="11" fill="#0B1020" stroke="#38BDF8" stroke-width="5"/>
-
-  <!-- Pruned branch base leading into precision cut -->
-  <path d="M 86 144 C 110 144, 120 124, 134 114" stroke="#38BDF8" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
-  <path d="M 86 106 C 104 106, 114 96, 124 88" stroke="#38BDF8" stroke-width="7" stroke-linecap="round" opacity="0.6"/>
-
-  <!-- Precision crescent pruning arc -->
-  <path d="M 118 164 Q 144 118 162 72" fill="none" stroke="url(#blade)" stroke-width="6" stroke-linecap="round"/>
-
-  <!-- Firework sparks bursting from pruned dead branches -->
-  <g stroke="url(#spark)" stroke-linecap="round">
-    <line x1="146" y1="106" x2="184" y2="74" stroke-width="7"/>
-    <line x1="152" y1="118" x2="202" y2="106" stroke-width="6"/>
-    <line x1="148" y1="130" x2="190" y2="152" stroke-width="6"/>
-    <line x1="138" y1="84" x2="162" y2="48" stroke-width="5"/>
+    <!-- Seven asymmetric radial firework burst wedges -->
+    <path d="M -24 -42 L -56 -112 A 13 13 0 0 1 -32 -122 L -8 -52 Z" fill="#FF5226" />
+    <path d="M -4 -30 L -14 -162 A 14 14 0 0 1 14 -162 L 10 -34 Z" fill="#FF5226" />
+    <path d="M 14 -48 L 58 -148 A 14 14 0 0 1 84 -136 L 34 -42 Z" fill="#FF9500" />
+    <path d="M 4 -12 L 108 -116 A 14 14 0 0 1 128 -96 L 16 -4 Z" fill="#FF5226" />
+    <path d="M 52 -24 L 138 -74 A 14 14 0 0 1 152 -50 L 66 -2 Z" fill="#FF9500" />
+    <path d="M 8 10 L 146 -10 A 14 14 0 0 1 146 18 L 8 18 Z" fill="#FF5226" />
+    <path d="M 42 30 L 142 66 A 13 13 0 0 1 132 90 L 34 48 Z" fill="#FF5226" />
   </g>
-
-  <circle cx="192" cy="68" r="7" fill="#FFE066"/>
-  <circle cx="208" cy="104" r="6" fill="#FF9F1C"/>
-  <circle cx="196" cy="156" r="6" fill="#FF5A36"/>
-  <circle cx="166" cy="44" r="5" fill="#38BDF8"/>
-  <circle cx="174" cy="134" r="4" fill="#FFE066"/>
-  <circle cx="172" cy="90" r="4" fill="#38BDF8"/>
-  <circle cx="212" cy="132" r="3.5" fill="#FF9F1C"/>
 </svg>

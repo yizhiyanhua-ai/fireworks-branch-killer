@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/Python-3.9%2B%20零依赖-3776AB" alt="Python 3.9+ 零依赖" />
   <img src="https://img.shields.io/badge/兼容%20Harness-7%20款主流工具-10a37f" alt="兼容 7 款 Harness" />
   <img src="https://img.shields.io/badge/安全模型-四级%20Fail--Closed-d97757" alt="四级 Fail-Closed" />
-  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-25%20项沙箱单测-22c55e" alt="25 项沙箱单测" /></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-28%20项沙箱单测-22c55e" alt="28 项沙箱单测" /></a>
 </p>
 
 ---
@@ -105,11 +105,22 @@ python3 scripts/fbk.py install --target all --scope global --apply
 
 ---
 
-## 快速上手与命令手册
+## 快速上手：自然语言 + CLI 双轨用法
 
-你可以直接用自然语言让任意 Agent 调用（如*“用 fbk 体检一下多余 worktree”*、*“收尾关闭这个已合并分支的 worktree”*、*“瘦身闲置 worktree 里的 node_modules”*），也可以直接运行 CLI：
+装好 Skill 后，在 **Claude Code / Codex / Antigravity / Amp** 里直接说人话就能触发，也可以在终端直接调用 CLI：
 
-### 1. 只读全局体检与精准规划（`scan` & `plan`）
+| 使用场景 | 对 Agent 直接说人话 | 或在终端直接运行 CLI |
+| :--- | :--- | :--- |
+| **自进化工作区体检** | *“用 fbk doctor 体检一下工作区，给我省空间建议”* | `fbk doctor --root .` |
+| **查看专属活手册** | *“打开我的 fbk 动态省空间手册”* | `fbk doctor --show-playbook` |
+| **沉淀一条新踩坑/经验** | *“把这条经验记进 fbk doctor：每周清一次 .next/cache”* | `fbk doctor --root . --learn "每周清一次 .next/cache" --stack js-ts` |
+| **保源码、只清闲置缓存** | *“用 fbk 把闲置 worktree 里的 node_modules/.next/target 瘦个身”* | `fbk slim --root . --apply` |
+| **PR 合并后用完即焚** | *“这个 PR 已合入，用 fbk 收尾掉对应 worktree 和分支”* | `fbk close --worktree ./wt-feat --apply` |
+| **批量清理 / 反悔还原** | *“用 fbk 预览 Tier 0 清理”* / *“还原上次误删分支”* | `fbk clean --root . --tier 0 --apply` / `fbk restore <id> --apply` |
+
+*（未把 `~/.local/bin` 加入 `PATH` 时可改为 `python3 scripts/fbk.py ...`，或直接用 `npx -y github:yizhiyanhua-ai/fireworks-branch-killer ...` 零安装调用。）*
+
+### 1. 只读全局体检与精准规划（`scan` & `plan`)
 ```bash
 # 多级穿透扫描（支持 --harness、--older-than、--sort、--limit、--extra-base）
 python3 scripts/fbk.py scan --root /path/to/workspace --fast --no-size
@@ -157,6 +168,23 @@ python3 scripts/fbk.py audit-remote --repo /path/to/repo
 python3 scripts/fbk.py restore --list
 python3 scripts/fbk.py restore <receipt_id> --apply
 ```
+
+---
+
+## 从根源少占空间（AI Coding 全栈最佳实践）
+
+用 `fbk close` / `fbk clean` 回收已合并分支、用 `fbk slim` 瘦身闲置构建产物是「安全兜底」；再搭配下面按技术栈沉淀的**根源去重机制**，能让每个新开 worktree 从创建一刻起就省下数 GB 到数十 GB。
+
+更关键的是，`fbk doctor --root .` **是一个动态自进化系统**：每次运行都会实测本机技术栈与真实空间大户（自动采样 `st_nlink > 1` 区分 pnpm 硬链接和独占物理空间的 `.next/cache` / `target/`），将已修复告警自动归入 **Resolved Wins**，并吸收每次 `clean`/`slim`/`close` 实际释放的空间数据，持续更新本机专属的 `<state_dir>/playbook.md`（不污染代码仓库 Git 状态；支持 `--learn` 沉淀经验、`--show-playbook` 查看活手册、`--no-evolve` 纯只读）。完整指南见 [references/space-saving-tips.md](references/space-saving-tips.md)：
+
+| 技术栈 / 环节 | 从根源省空间做法 | 关键避坑与 `fbk` 联动 |
+| :--- | :--- | :--- |
+| **Claude Code** | 配置 `worktree.symlinkDirectories: ["node_modules", ".cache"]` | **`.gitignore` 尾斜杠陷阱**：必须写 `node_modules` 或 `/node_modules`，**禁止写 `node_modules/`**，否则 Git 把软链当文件不会忽略；`fbk slim` 采用 `follow_symlinks=False`，绝不误删软链目标。 |
+| **JS / TS (`pnpm` / `bun`)** | `pnpm-workspace.yaml` 配 `virtualStoreType: global`；或使用 `bun` 原生 APFS CoW | **硬链接真相**：普通 `pnpm` 的 `node_modules` 是硬链接到全局 store，单删 worktree 回收不了多少物理空间，必须配套 `pnpm store prune`；真正吃盘的大户往往是 `target/` 和 `.next/cache`。 |
+| **浏览器 E2E / QA** | 外置全局 `PLAYWRIGHT_BROWSERS_PATH`、`PUPPETEER_CACHE_DIR`、`CYPRESS_CACHE_FOLDER` | 避免重复下 400MB–1.2GB 浏览器；配置 `trace`/`video: "retain-on-failure"` 防止成功录屏爆盘。 |
+| **Python 与 AI / ML** | `uv` + `UV_LINK_MODE=clone`（macOS APFS），全局外置 `HF_HOME` / `TORCH_HOME` | 确保 `UV_CACHE_DIR` 与代码同卷以触发零拷贝克隆；勿把模型权重下进 worktree。 |
+| **Rust** | `RUSTC_WRAPPER=sccache`（并发首选）或共享 `CARGO_TARGET_DIR` | 避免每个 worktree 涨出 5–20GB `target/`，闲置目录交给 `fbk slim` 收掉。 |
+| **Go / 移动端 / Docker / Git** | 复用 `GOMODCACHE`、`GRADLE_USER_HOME`、Xcode `DerivedData`；`docker compose down -v`；`git maintenance start` | 优先 `git worktree` 而非完整 `git clone`；macOS 临时复制大目录用 `cp -cR` APFS 零拷贝。 |
 
 ---
 

@@ -29,7 +29,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 DEFAULT_STATE_DIR = os.path.join(
     os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache")),
     "fireworks-branch-killer",
@@ -2274,6 +2274,10 @@ def execute_clean(
     }
     if apply:
         vault.append_receipt(receipt)
+        if executed or freed_bytes > 0:
+            slim_dirs = [d for act in executed for d in act.get("slimmed_dirs", [])]
+            act_repos = set(touched_repos) | {act.get("repo") for act in executed if act.get("repo")}
+            record_action_learning(state_dir, "clean", freed_bytes, slim_dirs, {r for r in act_repos if r})
     return receipt
 
 
@@ -2309,6 +2313,7 @@ def cmd_close(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) ->
                     "status": "removed_broken_worktree",
                 }
                 vault.append_receipt(receipt)
+                record_action_learning(state_dir, "close", freed, [], set())
                 return 0, receipt
             return 0, {
                 "receipt_id": receipt_id,
@@ -2492,6 +2497,7 @@ def cmd_close(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) ->
             "vault_entries": vault_entries,
         }
         vault.append_receipt(receipt)
+        record_action_learning(state_dir, "close", freed_bytes, [], {repo_arg} if repo_arg else set())
         return 0, receipt
 
     needs_vault = bool(
@@ -3277,6 +3283,532 @@ def _check_claude_hooks_status(settings_path: Path) -> Dict[str, Any]:
         return {"status": f"invalid_json: {exc}", "session_start": False, "pre_tool_use": False}
 
 
+def _read_claude_symlink_dirs(settings_path: Path) -> List[str]:
+    """Extract Claude Code worktree.symlinkDirectories from nested or flat JSON keys."""
+    if not settings_path.is_file():
+        return []
+    try:
+        data = json.loads(settings_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    dirs: List[str] = []
+    wt_cfg = data.get("worktree")
+    if isinstance(wt_cfg, dict) and isinstance(wt_cfg.get("symlinkDirectories"), list):
+        dirs.extend(str(x).strip() for x in wt_cfg["symlinkDirectories"] if str(x).strip())
+    flat = data.get("worktree.symlinkDirectories")
+    if isinstance(flat, list):
+        dirs.extend(str(x).strip() for x in flat if str(x).strip())
+    return list(dict.fromkeys(dirs))
+
+
+def _find_trailing_slash_ignores(gitignore_path: Path, symlink_dirs: List[str]) -> List[str]:
+    """Return patterns in .gitignore whose trailing '/' breaks Git ignoring of symlinks."""
+    if not symlink_dirs or not gitignore_path.is_file():
+        return []
+    try:
+        lines = gitignore_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+    except OSError:
+        return []
+    targets = {d.strip("/").lstrip("./") for d in symlink_dirs if d.strip("/")}
+    bad: List[str] = []
+    for raw in lines:
+        line = raw.strip()
+        if not line or line.startswith("#") or not line.endswith("/"):
+            continue
+        norm = line.lstrip("/").rstrip("/")
+        if norm in targets:
+            bad.append(line)
+    return list(dict.fromkeys(bad))
+
+
+def _sample_dir_hardlink_stats(dir_path: Path, max_files: int = 200) -> Tuple[int, int]:
+    """Sample up to max_files regular files inside dir_path to detect hardlinked package stores (e.g., pnpm)."""
+    sampled = 0
+    hardlinked = 0
+    try:
+        for root_str, dirs, files in os.walk(dir_path, followlinks=False):
+            # Prune deep recursion when we already sampled enough files
+            if len(dirs) > 60:
+                dirs[:] = dirs[:60]
+            for fn in files:
+                fp = os.path.join(root_str, fn)
+                try:
+                    st = os.lstat(fp)
+                except OSError:
+                    continue
+                if stat.S_ISREG(st.st_mode):
+                    sampled += 1
+                    if st.st_nlink > 1:
+                        hardlinked += 1
+                    if sampled >= max_files:
+                        return sampled, hardlinked
+    except OSError:
+        pass
+    return sampled, hardlinked
+
+
+def detect_space_saving_tips(
+    ws_root: Path, primary_repos: List[str]
+) -> Tuple[List[Dict[str, str]], Dict[str, Any]]:
+    """Inspect workspace & repo stacks read-only to emit actionable space-saving tips and observations."""
+    tips: List[Dict[str, str]] = []
+    seen_ids: Set[str] = set()
+
+    def add_tip(tip_id: str, severity: str, stack: str, message: str, action: str) -> None:
+        if tip_id in seen_ids:
+            return
+        seen_ids.add(tip_id)
+        tips.append(
+            {
+                "id": tip_id,
+                "severity": severity,
+                "stack": stack,
+                "message": message,
+                "action": action,
+            }
+        )
+
+    probe_roots: List[Path] = []
+    seen_roots: Set[str] = set()
+    for candidate in [ws_root] + [Path(r) for r in primary_repos]:
+        key = str(candidate)
+        if key not in seen_roots and candidate.is_dir():
+            seen_roots.add(key)
+            probe_roots.append(candidate)
+    try:
+        with os.scandir(ws_root) as it:
+            for entry in it:
+                if entry.name.startswith(".") or entry.name in SKIP_NESTED_NAMES:
+                    continue
+                if entry.is_dir(follow_symlinks=False):
+                    p = Path(entry.path)
+                    if str(p) not in seen_roots:
+                        seen_roots.add(str(p))
+                        probe_roots.append(p)
+    except OSError:
+        pass
+
+    global_symlink_dirs = _read_claude_symlink_dirs(Path(os.path.expanduser("~/.claude/settings.json")))
+
+    has_pkg_json = False
+    has_npm_lock = False
+    has_pnpm_lock = False
+    has_pnpm_global_store = False
+    has_e2e_browser = False
+    has_python = False
+    has_rust = False
+    has_jvm_or_mobile = False
+    independent_nm_count = 0
+    hardlinked_nm_count = 0
+    real_venvs = 0
+    trailing_slash_hits: List[str] = []
+    observed_stacks: Set[str] = set()
+    observed_hogs: Dict[str, Dict[str, Any]] = {}
+
+    def record_hog(hog_key: str, hardlinked: bool = False) -> None:
+        blk = observed_hogs.setdefault(hog_key, {"count": 0, "hardlinked": hardlinked})
+        blk["count"] += 1
+        blk["hardlinked"] = blk["hardlinked"] or hardlinked
+
+    for root in probe_roots:
+        try:
+            local_symlinks = _read_claude_symlink_dirs(root / ".claude" / "settings.json")
+            merged_symlinks = list(dict.fromkeys(local_symlinks + global_symlink_dirs))
+            if merged_symlinks:
+                observed_stacks.add("claude-code")
+                bad_patterns = _find_trailing_slash_ignores(root / ".gitignore", merged_symlinks)
+                if bad_patterns:
+                    trailing_slash_hits.append(f"{root.name}: {', '.join(bad_patterns)}")
+
+            pkg_path = root / "package.json"
+            if pkg_path.is_file():
+                has_pkg_json = True
+                observed_stacks.add("js-ts")
+                try:
+                    pkg_txt = pkg_path.read_text(encoding="utf-8", errors="ignore").lower()
+                    if any(k in pkg_txt for k in ('"playwright"', '"@playwright/test"', '"puppeteer"', '"cypress"')):
+                        has_e2e_browser = True
+                        observed_stacks.add("browser-e2e")
+                except OSError:
+                    pass
+            if (root / "package-lock.json").is_file():
+                has_npm_lock = True
+            if (root / "pnpm-lock.yaml").is_file():
+                has_pnpm_lock = True
+            pnpm_ws = root / "pnpm-workspace.yaml"
+            if pnpm_ws.is_file():
+                observed_stacks.add("js-ts")
+                try:
+                    p_txt = pnpm_ws.read_text(encoding="utf-8", errors="ignore")
+                    if "virtualStoreType: global" in p_txt or "enableGlobalVirtualStore: true" in p_txt:
+                        has_pnpm_global_store = True
+                except OSError:
+                    pass
+            for pw_cfg in ("playwright.config.ts", "playwright.config.js", "playwright.config.mjs"):
+                if (root / pw_cfg).is_file():
+                    has_e2e_browser = True
+                    observed_stacks.add("browser-e2e")
+            if (root / "pyproject.toml").is_file() or (root / "requirements.txt").is_file():
+                has_python = True
+                observed_stacks.add("python-ml")
+            if (root / "Cargo.toml").is_file():
+                has_rust = True
+                observed_stacks.add("rust")
+            if any((root / fn).is_file() for fn in ("build.gradle", "build.gradle.kts", "Package.swift", "pubspec.yaml")):
+                has_jvm_or_mobile = True
+                observed_stacks.add("mobile-jvm")
+
+            nm = root / "node_modules"
+            if nm.exists() and not nm.is_symlink() and nm.is_dir():
+                sampled, hardlinked = _sample_dir_hardlink_stats(nm)
+                if sampled >= 3 and (hardlinked / float(sampled)) >= 0.30:
+                    hardlinked_nm_count += 1
+                    record_hog("node_modules (hardlinked -> store)", hardlinked=True)
+                else:
+                    independent_nm_count += 1
+                    record_hog("node_modules (independent)", hardlinked=False)
+
+            for vn in (".venv", "venv"):
+                vp = root / vn
+                if vp.exists() and not vp.is_symlink() and vp.is_dir():
+                    real_venvs += 1
+                    record_hog(vn, hardlinked=False)
+
+            for hog_rel in (".next/cache", "target", ".turbo", "dist"):
+                hp = root / hog_rel
+                if hp.exists() and not hp.is_symlink() and hp.is_dir():
+                    record_hog(hog_rel, hardlinked=False)
+        except OSError:
+            continue
+
+    if trailing_slash_hits:
+        add_tip(
+            "gitignore_symlink_trailing_slash",
+            "warning",
+            "claude-code",
+            "worktree.symlinkDirectories is configured, but .gitignore uses trailing slashes ("
+            + "; ".join(trailing_slash_hits[:3])
+            + "). Git treats symlinks as files, so trailing '/' patterns fail to ignore symlinked directories.",
+            "Remove the trailing '/' in .gitignore (use '/node_modules' or 'node_modules' instead of 'node_modules/').",
+        )
+
+    if hardlinked_nm_count > 0 or has_pnpm_lock:
+        add_tip(
+            "pnpm_hardlink_store_prune",
+            "tip",
+            "js-ts",
+            "Detected pnpm / hardlinked node_modules backed by a global store. Deleting a worktree only unlinks hardlinks and frees minimal physical blocks until orphan store blobs are pruned; real exclusive hogs are target/ and .next/cache.",
+            "Run 'pnpm store prune' after cleanup bursts, and target '.next/cache' / 'target' with 'fbk slim' (or enable virtualStoreType: global).",
+        )
+
+    if has_pkg_json and not has_pnpm_global_store and (has_npm_lock or independent_nm_count >= 2):
+        add_tip(
+            "js_shared_dependencies",
+            "tip",
+            "js-ts",
+            "Detected JS/TS repos duplicating independent node_modules across worktrees without pnpm Global Virtual Store.",
+            "Set 'virtualStoreType: global' in pnpm-workspace.yaml, use bun APFS CoW, or configure Claude Code worktree.symlinkDirectories.",
+        )
+
+    if has_e2e_browser and not (
+        os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
+        or os.environ.get("PUPPETEER_CACHE_DIR")
+        or os.environ.get("CYPRESS_CACHE_FOLDER")
+    ):
+        add_tip(
+            "e2e_browser_cache",
+            "tip",
+            "browser-e2e",
+            "Detected Playwright/Puppeteer/Cypress usage without external browser cache env vars (can duplicate 400MB-1.2GB per environment).",
+            "Export PLAYWRIGHT_BROWSERS_PATH / PUPPETEER_CACHE_DIR / CYPRESS_CACHE_FOLDER globally and use trace/video 'retain-on-failure'.",
+        )
+
+    if has_python and not os.environ.get("UV_LINK_MODE") and (real_venvs >= 1 or has_python):
+        add_tip(
+            "python_uv_cow_venv",
+            "tip",
+            "python-ml",
+            "Detected Python projects without UV_LINK_MODE Copy-on-Write configuration.",
+            "Use 'uv' with UV_LINK_MODE=clone (macOS APFS) / hardlink (Linux), and keep HF_HOME / TORCH_HOME outside worktrees.",
+        )
+
+    if has_rust and not os.environ.get("CARGO_TARGET_DIR") and not os.environ.get("RUSTC_WRAPPER"):
+        add_tip(
+            "rust_shared_target_or_sccache",
+            "tip",
+            "rust",
+            "Detected Cargo.toml without RUSTC_WRAPPER=sccache or shared CARGO_TARGET_DIR (each Rust worktree target/ often eats 5-20GB).",
+            "Set RUSTC_WRAPPER=sccache for parallel builds (+ 'fbk slim' for idle worktrees) or share CARGO_TARGET_DIR.",
+        )
+
+    if has_jvm_or_mobile:
+        add_tip(
+            "mobile_or_jvm_build_cache",
+            "tip",
+            "mobile-jvm",
+            "Detected Gradle / Swift / Flutter workspace where per-worktree build dirs (.gradle, .build, Pods, .dart_tool) accumulate quickly.",
+            "Keep global GRADLE_USER_HOME / Xcode DerivedData enabled and add project-local build dirs to fbk slim_cache_dirs.",
+        )
+
+    observation = {
+        "stacks": sorted(observed_stacks),
+        "hogs": observed_hogs,
+        "hardlinked_nm_count": hardlinked_nm_count,
+        "independent_nm_count": independent_nm_count,
+    }
+    return tips, observation
+
+
+def _default_evolution_profile() -> Dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "updated_at": now_utc_iso(),
+        "doctor_runs": 0,
+        "cleanup_runs": 0,
+        "cumulative_freed_bytes": 0,
+        "observed_stacks": {},
+        "observed_hogs": {},
+        "recurring_repos": {},
+        "active_tips": {},
+        "resolved_tips": {},
+        "custom_lessons": [],
+    }
+
+
+def _load_evolution_profile(state_dir: Path) -> Dict[str, Any]:
+    prof_path = state_dir / "evolution-profile.json"
+    base = _default_evolution_profile()
+    if not prof_path.is_file():
+        return base
+    try:
+        loaded = json.loads(prof_path.read_text(encoding="utf-8"))
+        if isinstance(loaded, dict):
+            for k, v in loaded.items():
+                if k in base:
+                    base[k] = v
+    except (OSError, ValueError):
+        pass
+    return base
+
+
+def _save_evolution_profile(state_dir: Path, profile: Dict[str, Any]) -> bool:
+    try:
+        state_dir.mkdir(parents=True, exist_ok=True)
+        (state_dir / "evolution-profile.json").write_text(
+            json.dumps(profile, indent=2, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        (state_dir / "playbook.md").write_text(
+            render_evolution_playbook(profile),
+            encoding="utf-8",
+        )
+        return True
+    except OSError:
+        return False
+
+
+def render_evolution_playbook(profile: Dict[str, Any]) -> str:
+    """Render a living, machine-tailored Markdown space-saving playbook from observed history."""
+    lines: List[str] = [
+        "# Dynamic Self-Evolving Space-Saving Playbook",
+        "",
+        f"> Last evolved: `{profile.get('updated_at', '')}` · Doctor runs: **{profile.get('doctor_runs', 0)}** · "
+        f"Cleanup runs: **{profile.get('cleanup_runs', 0)}** · Cumulative reclaimed: **{human_bytes(int(profile.get('cumulative_freed_bytes', 0)))}**",
+        "",
+        "## 1. Observed Tech-Stack Profile",
+    ]
+    stacks = profile.get("observed_stacks") or {}
+    if stacks:
+        for name, info in sorted(stacks.items(), key=lambda kv: (-int(kv[1].get("count", 0)), kv[0])):
+            lines.append(f"- **{name}**: seen {info.get('count', 0)}x (last: {info.get('last_seen', '')})")
+    else:
+        lines.append("- *No stacks observed yet. Run `fbk doctor --root .` in a workspace.*")
+
+    lines.extend(["", "## 2. Observed Disk Hogs (Hardlink-Aware)"])
+    hogs = profile.get("observed_hogs") or {}
+    if hogs:
+        for hname, info in sorted(
+            hogs.items(),
+            key=lambda kv: (-int(kv[1].get("freed_bytes", 0)), -int(kv[1].get("count", 0)), kv[0]),
+        ):
+            hl_tag = "hardlinked -> store (needs `pnpm store prune`)" if info.get("hardlinked") else "exclusive physical disk"
+            freed_h = human_bytes(int(info.get("freed_bytes", 0)))
+            lines.append(f"- `{hname}` [{hl_tag}]: observed {info.get('count', 0)}x, reclaimed {freed_h}")
+    else:
+        lines.append("- *No build/dependency hogs recorded yet.*")
+
+    lines.extend(["", "## 3. Active Warnings & Recommendations"])
+    active = profile.get("active_tips") or {}
+    if active:
+        for tid, info in sorted(active.items(), key=lambda kv: (0 if kv[1].get("severity") == "warning" else 1, kv[0])):
+            sev = "WARN" if info.get("severity") == "warning" else "TIP"
+            lines.append(f"- **[{sev}][{info.get('stack', 'general')}] `{tid}`**: {info.get('message', '')}")
+            lines.append(f"  - Action: {info.get('action', '')}")
+    else:
+        lines.append("- *All observed stacks are clean with zero pending recommendations.*")
+
+    resolved = profile.get("resolved_tips") or {}
+    if resolved:
+        lines.extend(["", "## 4. Resolved Wins (Auto-Cleared by Re-Inspection)"])
+        for tid, info in sorted(resolved.items()):
+            lines.append(f"- `{tid}` [{info.get('stack', 'general')}]: resolved at {info.get('resolved_at', '')}")
+
+    lessons = profile.get("custom_lessons") or []
+    lines.extend(["", "## 5. Custom Lessons (`fbk doctor --learn`)"])
+    if lessons:
+        for item in lessons:
+            lines.append(f"- **[{item.get('stack', 'general')}]** {item.get('text', '')} *(added {item.get('added_at', '')})*")
+    else:
+        lines.append("- *No custom lessons yet. Record one via `fbk doctor --learn \"...\" --stack <tag>`.*")
+
+    hotspots = profile.get("recurring_repos") or {}
+    if hotspots:
+        lines.extend(["", "## 6. Recurring Cleanup Hotspots"])
+        for rname, info in sorted(hotspots.items(), key=lambda kv: (-int(kv[1].get("freed_bytes", 0)), -int(kv[1].get("cleanups", 0)), kv[0]))[:10]:
+            lines.append(f"- `{rname}`: {info.get('cleanups', 0)} cleanups, {human_bytes(int(info.get('freed_bytes', 0)))} reclaimed")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+def evolve_playbook_from_doctor(
+    state_dir: Path,
+    root_path: str,
+    tips: List[Dict[str, str]],
+    obs: Dict[str, Any],
+    learn_text: Optional[str] = None,
+    learn_stack: str = "general",
+    evolve: bool = True,
+) -> Tuple[Dict[str, Any], List[str], str]:
+    """Update evolution-profile.json and playbook.md from a doctor run (or preview read-only when evolve=False)."""
+    profile = _load_evolution_profile(state_dir)
+    now_iso = now_utc_iso()
+    profile["updated_at"] = now_iso
+    profile["doctor_runs"] = int(profile.get("doctor_runs", 0)) + 1
+
+    stacks_map = profile.setdefault("observed_stacks", {})
+    for st in obs.get("stacks", []):
+        entry = stacks_map.setdefault(st, {"count": 0, "last_seen": now_iso})
+        entry["count"] = int(entry.get("count", 0)) + 1
+        entry["last_seen"] = now_iso
+
+    hogs_map = profile.setdefault("observed_hogs", {})
+    for hog_name, hinfo in (obs.get("hogs") or {}).items():
+        entry = hogs_map.setdefault(hog_name, {"count": 0, "hardlinked": bool(hinfo.get("hardlinked")), "freed_bytes": 0, "last_seen": now_iso})
+        entry["count"] = int(entry.get("count", 0)) + int(hinfo.get("count", 1))
+        entry["hardlinked"] = bool(entry.get("hardlinked")) or bool(hinfo.get("hardlinked"))
+        entry["last_seen"] = now_iso
+
+    active_map = profile.setdefault("active_tips", {})
+    resolved_map = profile.setdefault("resolved_tips", {})
+    current_ids = {t["id"] for t in tips}
+    newly_resolved: List[str] = []
+
+    for old_id in list(active_map.keys()):
+        if old_id in current_ids:
+            continue
+        old_entry = active_map[old_id]
+        roots = set(old_entry.get("roots") or [])
+        if not roots or root_path in roots:
+            roots.discard(root_path)
+            if not roots:
+                active_map.pop(old_id, None)
+                resolved_map[old_id] = {
+                    "resolved_at": now_iso,
+                    "stack": old_entry.get("stack", "general"),
+                    "message": old_entry.get("message", ""),
+                }
+                newly_resolved.append(old_id)
+            else:
+                old_entry["roots"] = sorted(roots)
+
+    for tip in tips:
+        tid = tip["id"]
+        resolved_map.pop(tid, None)
+        prev = active_map.get(tid, {})
+        roots = set(prev.get("roots") or [])
+        roots.add(root_path)
+        active_map[tid] = {
+            "severity": tip["severity"],
+            "stack": tip["stack"],
+            "message": tip["message"],
+            "action": tip["action"],
+            "roots": sorted(roots),
+            "last_seen": now_iso,
+        }
+
+    if learn_text and learn_text.strip():
+        clean_txt = learn_text.strip()
+        lessons = profile.setdefault("custom_lessons", [])
+        if not any(str(x.get("text", "")).strip() == clean_txt for x in lessons):
+            lessons.append({"text": clean_txt, "stack": learn_stack or "general", "added_at": now_iso})
+
+    if evolve:
+        saved = _save_evolution_profile(state_dir, profile)
+    else:
+        saved = False
+
+    playbook_md = render_evolution_playbook(profile)
+    evo_summary = {
+        "evolved": saved,
+        "doctor_runs": profile["doctor_runs"],
+        "cleanup_runs": profile["cleanup_runs"],
+        "cumulative_freed_bytes": profile["cumulative_freed_bytes"],
+        "cumulative_freed_human": human_bytes(int(profile["cumulative_freed_bytes"])),
+        "newly_resolved": newly_resolved,
+        "custom_lessons_count": len(profile.get("custom_lessons") or []),
+    }
+    return evo_summary, newly_resolved, playbook_md
+
+
+def record_action_learning(
+    state_dir: Path,
+    command: str,
+    freed_bytes: int,
+    slimmed_dirs: List[str],
+    repo_paths: Set[str],
+) -> None:
+    """Feed real cleanup/slim outcomes back into the local self-evolving profile & playbook."""
+    try:
+        profile = _load_evolution_profile(state_dir)
+        now_iso = now_utc_iso()
+        profile["updated_at"] = now_iso
+        profile["cleanup_runs"] = int(profile.get("cleanup_runs", 0)) + 1
+        profile["cumulative_freed_bytes"] = int(profile.get("cumulative_freed_bytes", 0)) + max(0, int(freed_bytes))
+
+        hogs_map = profile.setdefault("observed_hogs", {})
+        for d in slimmed_dirs:
+            d_path = Path(d)
+            if d_path.name == "cache" and d_path.parent.name == ".next":
+                hog_key = ".next/cache"
+            else:
+                hog_key = d_path.name
+            entry = hogs_map.setdefault(hog_key, {"count": 0, "hardlinked": False, "freed_bytes": 0, "last_seen": now_iso})
+            entry["count"] = int(entry.get("count", 0)) + 1
+            entry["last_seen"] = now_iso
+
+        if slimmed_dirs and freed_bytes > 0:
+            per_dir = int(freed_bytes // max(1, len(slimmed_dirs)))
+            for d in slimmed_dirs:
+                d_path = Path(d)
+                hog_key = ".next/cache" if (d_path.name == "cache" and d_path.parent.name == ".next") else d_path.name
+                hogs_map[hog_key]["freed_bytes"] = int(hogs_map[hog_key].get("freed_bytes", 0)) + per_dir
+
+        repos_map = profile.setdefault("recurring_repos", {})
+        for rp in repo_paths:
+            rname = os.path.basename(rp.rstrip("/")) or rp
+            rentry = repos_map.setdefault(rname, {"cleanups": 0, "freed_bytes": 0, "last_seen": now_iso})
+            rentry["cleanups"] = int(rentry.get("cleanups", 0)) + 1
+            rentry["freed_bytes"] = int(rentry.get("freed_bytes", 0)) + max(0, int(freed_bytes // max(1, len(repo_paths))))
+            rentry["last_seen"] = now_iso
+
+        _save_evolution_profile(state_dir, profile)
+    except Exception:
+        pass
+
+
 def cmd_doctor(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) -> Tuple[int, Dict[str, Any]]:
     git_v = subprocess.run(["git", "--version"], stdout=subprocess.PIPE, text=True).stdout.strip()
     ws_root = Path(realpath_str(args.workspace)) if getattr(args, "workspace", None) else Path(realpath_str(os.getcwd()))
@@ -3314,12 +3846,28 @@ def cmd_doctor(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) -
             global_checks[label] = "unreadable_in_sandbox"
 
     broken_alternates_report: List[Dict[str, Any]] = []
+    discovered_primaries: List[str] = []
     if getattr(args, "root", None):
-        _, _, primary_repos, _, _, _ = discover_targets(None, args.root, max_depth=int(cfg.get("discover_max_depth", 3)))
-        for repo in primary_repos:
+        _, _, discovered_primaries, _, _, _ = discover_targets(None, args.root, max_depth=int(cfg.get("discover_max_depth", 3)))
+        for repo in discovered_primaries:
             missing = inspect_repo_alternates(repo)
             if missing:
                 broken_alternates_report.append({"repo": repo, "missing_alternates": missing})
+
+    tip_root = Path(realpath_str(args.root)) if getattr(args, "root", None) else ws_root
+    space_saving_tips, obs_snapshot = detect_space_saving_tips(tip_root, discovered_primaries)
+    evolve_enabled = not bool(getattr(args, "no_evolve", False))
+    learn_text = getattr(args, "learn", None)
+    learn_stack = getattr(args, "stack", "general") or "general"
+    evo_summary, _, playbook_md = evolve_playbook_from_doctor(
+        state_dir=state_dir,
+        root_path=str(tip_root),
+        tips=space_saving_tips,
+        obs=obs_snapshot,
+        learn_text=learn_text,
+        learn_stack=learn_stack,
+        evolve=evolve_enabled,
+    )
 
     retention_days = int(cfg.get("vault_retention_days", 7))
     cutoff = time.time() - retention_days * 86400
@@ -3339,7 +3887,7 @@ def cmd_doctor(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) -
             shutil.rmtree(vp, ignore_errors=True)
             pruned.append(vp)
 
-    return 0, {
+    payload: Dict[str, Any] = {
         "python_version": sys.version.split()[0],
         "git_version": git_v,
         "workspace": str(ws_root),
@@ -3362,8 +3910,14 @@ def cmd_doctor(args: argparse.Namespace, cfg: Dict[str, Any], state_dir: Path) -
         "expired_vault_count": len(expired_vaults),
         "expired_vaults": expired_vaults,
         "pruned_vaults": pruned,
+        "space_saving_tips": space_saving_tips,
+        "playbook_path": str(state_dir / "playbook.md"),
+        "evolution": evo_summary,
         "apply": args.apply,
     }
+    if getattr(args, "show_playbook", False):
+        payload["playbook_markdown"] = playbook_md
+    return 0, payload
 
 
 def format_scan_text(scan: ScanResult, limit: int = 10) -> str:
@@ -3582,11 +4136,15 @@ def main(argv: Optional[List[str]] = None) -> int:
     p_install.add_argument("--config", help="Optional config JSON")
     p_install.add_argument("--format", choices=["text", "json"], default="text")
 
-    p_doc = sub.add_parser("doctor", help="Check environment health, harness integrations, alternates, and expired vault entries")
+    p_doc = sub.add_parser("doctor", help="Check environment health, harness integrations, alternates, and evolve local space-saving playbook")
     p_doc.add_argument("--workspace", default=os.getcwd(), help="Workspace root for hook/skill checks (default: cwd)")
-    p_doc.add_argument("--root", help="Optional root directory to inspect for broken alternates")
+    p_doc.add_argument("--root", help="Optional root directory to inspect for broken alternates & stack tips")
     p_doc.add_argument("--prune-vault", action="store_true", help="Identify/prune vault directories older than vault_retention_days")
     p_doc.add_argument("--apply", action="store_true", help="Actually delete expired vault directories")
+    p_doc.add_argument("--no-evolve", action="store_true", help="Do not update <state_dir>/evolution-profile.json or playbook.md")
+    p_doc.add_argument("--show-playbook", action="store_true", help="Print the dynamic self-evolving local playbook")
+    p_doc.add_argument("--learn", help="Record a custom space-saving lesson into the local playbook")
+    p_doc.add_argument("--stack", default="general", help="Stack tag for --learn (e.g., js-ts, rust, python-ml, claude-code, docker)")
     p_doc.add_argument("--state-dir", default=os.environ.get("FBK_STATE_DIR", DEFAULT_STATE_DIR))
     p_doc.add_argument("--config", help="Optional config JSON")
     p_doc.add_argument("--format", choices=["text", "json"], default="text")
@@ -3636,6 +4194,8 @@ def main(argv: Optional[List[str]] = None) -> int:
         rc, payload = cmd_doctor(args, cfg, state_dir)
         if args.format == "json":
             print(json.dumps(payload, indent=2, ensure_ascii=False))
+        elif getattr(args, "show_playbook", False) and payload.get("playbook_markdown"):
+            print(payload["playbook_markdown"])
         else:
             print(f"Python: {payload['python_version']} | {payload['git_version']}")
             print(f"Workspace: {payload['workspace']} | State dir: {payload['state_dir']} (exists={payload['state_dir_exists']})")
@@ -3647,6 +4207,17 @@ def main(argv: Optional[List[str]] = None) -> int:
                 for ba in payload["broken_alternates"]:
                     print(f"  ! {ba['repo']}: missing {ba['missing_alternates']}")
             print(f"Vaults: {payload['vault_count']} total, {payload['expired_vault_count']} expired")
+            evo = payload.get("evolution") or {}
+            print(
+                f"Playbook ({payload.get('playbook_path')}): evolved={evo.get('evolved')} | runs={evo.get('doctor_runs', 0)} | cumulative_freed={evo.get('cumulative_freed_human', '0 B')}"
+            )
+            if evo.get("newly_resolved"):
+                print("Resolved since last check: " + ", ".join(evo["newly_resolved"]))
+            if payload.get("space_saving_tips"):
+                print(f"Space-Saving Tips ({len(payload['space_saving_tips'])}):")
+                for tip in payload["space_saving_tips"]:
+                    tag = "WARN" if tip.get("severity") == "warning" else "TIP"
+                    print(f"  - [{tag}][{tip.get('stack')}] {tip.get('message')} -> {tip.get('action')}")
         return rc
 
     if args.command == "repair-alternates":

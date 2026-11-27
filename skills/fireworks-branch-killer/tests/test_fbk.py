@@ -906,13 +906,237 @@ class TestFireworksBranchKiller(unittest.TestCase):
         import re as _re
 
         v = json.loads(self.run_fbk(["version", "--format", "json"]).stdout)
-        self.assertEqual(v["version"], "1.0.0")
+        self.assertEqual(v["version"], "1.1.0")
         self.assertTrue(Path(v["skill_root"]).is_dir())
         fbk_text = FBK_PATH.read_text(encoding="utf-8")
         hook_text = HOOK_PATH.read_text(encoding="utf-8")
         home_pat = _re.compile(r"(/Users/|/home/)[A-Za-z0-9._-]+/")
         self.assertIsNone(home_pat.search(fbk_text))
         self.assertIsNone(home_pat.search(hook_text))
+
+    def test_26_doctor_space_saving_tips_and_gitignore_trap(self) -> None:
+        ws = self.tmp / "stack_ws"
+        ws.mkdir(parents=True)
+        (ws / ".claude").mkdir()
+        (ws / ".claude" / "settings.json").write_text(
+            json.dumps({"worktree": {"symlinkDirectories": ["node_modules", ".cache"]}}),
+            encoding="utf-8",
+        )
+        (ws / ".gitignore").write_text("node_modules/\ndist/\n", encoding="utf-8")
+        (ws / "package.json").write_text('{"name":"demo","devDependencies":{"@playwright/test":"^1.0.0"}}', encoding="utf-8")
+        (ws / "package-lock.json").write_text("{}", encoding="utf-8")
+        (ws / "pyproject.toml").write_text("[project]\nname='demo'\n", encoding="utf-8")
+        (ws / "Cargo.toml").write_text("[package]\nname='demo'\nversion='0.1.0'\n", encoding="utf-8")
+        (ws / "Package.swift").write_text("// swift-tools-version:5.9\n", encoding="utf-8")
+
+        env = {
+            **os.environ,
+            "UV_LINK_MODE": "",
+            "CARGO_TARGET_DIR": "",
+            "RUSTC_WRAPPER": "",
+            "PLAYWRIGHT_BROWSERS_PATH": "",
+            "PUPPETEER_CACHE_DIR": "",
+            "CYPRESS_CACHE_FOLDER": "",
+        }
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(FBK_PATH),
+                "doctor",
+                "--root",
+                str(ws),
+                "--workspace",
+                str(ws),
+                "--state-dir",
+                str(self.state_dir),
+                "--format",
+                "json",
+            ],
+            cwd=str(ws),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        doc = json.loads(proc.stdout)
+        tip_ids = {t["id"] for t in doc.get("space_saving_tips", [])}
+        self.assertIn("gitignore_symlink_trailing_slash", tip_ids)
+        self.assertIn("js_shared_dependencies", tip_ids)
+        self.assertIn("e2e_browser_cache", tip_ids)
+        self.assertIn("python_uv_cow_venv", tip_ids)
+        self.assertIn("rust_shared_target_or_sccache", tip_ids)
+        self.assertIn("mobile_or_jvm_build_cache", tip_ids)
+
+    def test_27_slim_never_deletes_symlinked_node_modules(self) -> None:
+        repo = self.root / "repo-symlink"
+        init_repo(repo)
+        shared_nm = repo / "node_modules"
+        shared_nm.mkdir()
+        marker = shared_nm / "keep_me.js"
+        marker.write_text("module.exports = 1;\n", encoding="utf-8")
+
+        wt = self.root / "wt-symlinked"
+        run_cmd(["git", "-C", str(repo), "worktree", "add", "-b", "feat/symlinked", str(wt)])
+        git_commit(wt, "src.txt", "ok\n", "work commit", days_ago=10)
+        os.symlink(shared_nm, wt / "node_modules")
+        next_dir = wt / ".next"
+        next_dir.mkdir()
+        (next_dir / "bundle.js").write_text("x" * 2048, encoding="utf-8")
+        age_path(wt, days_ago=10)
+
+        res = self.run_fbk(["slim", "--root", str(self.root), "--apply", "--format", "json"])
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertTrue((wt / "node_modules").is_symlink())
+        self.assertTrue(marker.is_file())
+        self.assertFalse(next_dir.exists())
+
+    def test_28_self_evolving_doctor_playbook_and_hardlink_detection(self) -> None:
+        ws = self.tmp / "evolve_ws"
+        ws.mkdir(parents=True)
+        store_dir = self.tmp / "pnpm_store"
+        store_dir.mkdir(parents=True)
+        repo = ws / "app-web"
+        init_repo(repo)
+        (repo / ".claude").mkdir()
+        (repo / ".claude" / "settings.json").write_text(
+            json.dumps({"worktree": {"symlinkDirectories": ["node_modules"]}}),
+            encoding="utf-8",
+        )
+        (repo / ".gitignore").write_text("node_modules/\n.next/\ntarget/\n", encoding="utf-8")
+        (repo / "package.json").write_text('{"name":"web"}', encoding="utf-8")
+        (repo / "pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n", encoding="utf-8")
+
+        # Hardlinked node_modules backed by store_dir (st_nlink > 1)
+        nm_dir = repo / "node_modules" / "pkg"
+        nm_dir.mkdir(parents=True)
+        for i in range(6):
+            src = store_dir / f"blob_{i}.js"
+            src.write_text("console.log('x');\n", encoding="utf-8")
+            os.link(src, nm_dir / f"index_{i}.js")
+
+        # Idle worktree with exclusive .next/cache and target
+        wt = ws / "wt-next-cache"
+        run_cmd(["git", "-C", str(repo), "worktree", "add", "-b", "feat/cache-test", str(wt)])
+        git_commit(wt, "page.tsx", "export default 1;\n", "page commit", days_ago=10)
+        next_cache = wt / ".next" / "cache"
+        next_cache.mkdir(parents=True)
+        (next_cache / "pack.bin").write_bytes(b"z" * 4096)
+        (repo / ".next" / "cache").mkdir(parents=True)
+        (repo / "target").mkdir()
+        age_path(wt, days_ago=10)
+
+        env = {**os.environ, "UV_LINK_MODE": "clone", "CARGO_TARGET_DIR": "/tmp/shared"}
+        # 1. Run doctor -> detects hardlinked pnpm store need + gitignore trailing slash, evolves playbook
+        r1 = subprocess.run(
+            [
+                sys.executable,
+                str(FBK_PATH),
+                "doctor",
+                "--root",
+                str(ws),
+                "--workspace",
+                str(ws),
+                "--state-dir",
+                str(self.state_dir),
+                "--format",
+                "json",
+            ],
+            cwd=str(ws),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(r1.returncode, 0, r1.stderr)
+        d1 = json.loads(r1.stdout)
+        ids1 = {t["id"] for t in d1["space_saving_tips"]}
+        self.assertIn("pnpm_hardlink_store_prune", ids1)
+        self.assertIn("gitignore_symlink_trailing_slash", ids1)
+        self.assertTrue(d1["evolution"]["evolved"])
+        self.assertTrue((self.state_dir / "evolution-profile.json").is_file())
+        self.assertTrue((self.state_dir / "playbook.md").is_file())
+
+        # 2. Record custom lesson via --learn and verify --show-playbook prints it
+        r2 = subprocess.run(
+            [
+                sys.executable,
+                str(FBK_PATH),
+                "doctor",
+                "--root",
+                str(ws),
+                "--workspace",
+                str(ws),
+                "--state-dir",
+                str(self.state_dir),
+                "--learn",
+                "Prune pnpm store monthly and clear .next/cache weekly",
+                "--stack",
+                "js-ts",
+                "--show-playbook",
+            ],
+            cwd=str(ws),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(r2.returncode, 0, r2.stderr)
+        self.assertIn("Prune pnpm store monthly and clear .next/cache weekly", r2.stdout)
+        self.assertIn("hardlinked -> store", r2.stdout)
+
+        # 3. Fix .gitignore trailing slash and re-run doctor -> automatically moves warning to resolved_tips
+        (repo / ".gitignore").write_text("node_modules\n.next/\ntarget/\n", encoding="utf-8")
+        r3 = subprocess.run(
+            [
+                sys.executable,
+                str(FBK_PATH),
+                "doctor",
+                "--root",
+                str(ws),
+                "--workspace",
+                str(ws),
+                "--state-dir",
+                str(self.state_dir),
+                "--format",
+                "json",
+            ],
+            cwd=str(ws),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(r3.returncode, 0, r3.stderr)
+        d3 = json.loads(r3.stdout)
+        self.assertIn("gitignore_symlink_trailing_slash", d3["evolution"]["newly_resolved"])
+
+        # 4. Run slim --apply -> feeds real cleanup count & freed bytes back into evolution-profile.json
+        r4 = subprocess.run(
+            [
+                sys.executable,
+                str(FBK_PATH),
+                "slim",
+                "--root",
+                str(ws),
+                "--state-dir",
+                str(self.state_dir),
+                "--apply",
+                "--format",
+                "json",
+            ],
+            cwd=str(ws),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+        self.assertEqual(r4.returncode, 0, r4.stderr)
+        prof = json.loads((self.state_dir / "evolution-profile.json").read_text(encoding="utf-8"))
+        self.assertGreaterEqual(prof["cleanup_runs"], 1)
+        self.assertGreater(prof["cumulative_freed_bytes"], 0)
+        pb_text = (self.state_dir / "playbook.md").read_text(encoding="utf-8")
+        self.assertIn("Resolved Wins", pb_text)
 
 
 if __name__ == "__main__":

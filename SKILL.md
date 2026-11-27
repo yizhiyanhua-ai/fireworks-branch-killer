@@ -9,7 +9,8 @@ description: >-
   AI coding task branch/worktree, repair broken worktree pointers or alternates,
   prune local agent remotes, prepare clean-slate cutover bundles, or audit repo
   branch bloat. Trigger on phrases like "清理 worktree", "清理分支", "分支爆炸",
-  "释放磁盘空间", "收尾分支", "fireworks-branch-killer", or "fbk".
+  "释放磁盘空间", "收尾分支", "工作区诊断", "省空间建议", "自进化手册", "沉淀经验",
+  "磁盘空间优化", "fbk doctor", "fireworks-branch-killer", or "fbk".
 ---
 
 # Fireworks Branch Killer (`fbk`)
@@ -46,11 +47,12 @@ python3 ./scripts/fbk.py close --worktree /path/to/worktree --apply
 python3 ./scripts/fbk.py close --branch feat/abandoned --force-unmerged --apply
 ```
 
-### 3. Reclaim Disk Space Without Deleting Branches (`slim`)
+### 3. Reclaim Disk Space Without Deleting Branches (`slim`) & Root-Cause Prevention
 ```bash
 python3 ./scripts/fbk.py slim --root . --no-size
 python3 ./scripts/fbk.py slim --root . --apply
 ```
+> When helping users slim or inspect a crowded workspace (or running `doctor --root .`), inspect `space_saving_tips` in `doctor` output and proactively remind them of relevant stack-level prevention techniques from [references/space-saving-tips.md](./references/space-saving-tips.md) (such as Claude Code `worktree.symlinkDirectories` and its `.gitignore` trailing-slash trap, `pnpm` Global Virtual Store, Playwright/Puppeteer browser cache env vars, `uv` CoW cloning, and Rust `sccache`/`CARGO_TARGET_DIR`).
 
 ### 4. Severe Bloat Governance (`prune-remotes`, `cutover-bundle`, `repair-alternates`, `audit-remote`)
 ```bash
@@ -67,16 +69,30 @@ python3 ./scripts/fbk.py repair-alternates --repo /path/to/repo
 python3 ./scripts/fbk.py audit-remote --repo /path/to/repo
 ```
 
-### 5. Restore, Cross-Harness Install, Doctor & Version
+### 5. Restore, Self-Evolving Doctor, Cross-Harness Install & Version
 ```bash
+python3 ./scripts/fbk.py doctor --root .
+python3 ./scripts/fbk.py doctor --show-playbook
+python3 ./scripts/fbk.py doctor --root . --learn "Prune pnpm store monthly" --stack js-ts
 python3 ./scripts/fbk.py restore --list
 python3 ./scripts/fbk.py restore <receipt_id> --apply
 python3 ./scripts/fbk.py install --target all --scope workspace --apply
-python3 ./scripts/fbk.py doctor --root .
 python3 ./scripts/fbk.py version
 ```
 
+## Natural Language & CLI Dual-Track Triggers
+
+| User Intent (Natural Language) | CLI Command to Run |
+| :--- | :--- |
+| "诊断工作区 / 给我省空间建议 / 体检一下" | `python3 ./scripts/fbk.py doctor --root .` |
+| "打开我的动态省空间手册 / 查看经验沉淀" | `python3 ./scripts/fbk.py doctor --show-playbook` |
+| "把这条省空间经验/踩坑记进 fbk" | `python3 ./scripts/fbk.py doctor --root . --learn "<lesson>" --stack <tag>` |
+| "不删分支，只清闲置依赖和构建缓存" | `python3 ./scripts/fbk.py slim --root . --apply` |
+| "PR 已合入，帮我收尾这个 worktree/分支" | `python3 ./scripts/fbk.py close --worktree <path> --apply` |
+| "清理已合并分支 / 恢复误删分支" | `python3 ./scripts/fbk.py clean --root . --tier 0 --apply` / `restore <id> --apply` |
+
 ## References
 - 4-Tier rules, zero-write probing, alternates repair & Recovery Vault: [references/safety-policy.md](./references/safety-policy.md)
+- Full-stack AI coding root-cause space-saving patterns & caveats: [references/space-saving-tips.md](./references/space-saving-tips.md)
 - 7-Harness matrix, `SessionStart` + `PreToolUse` guard, and `launchd`: [references/automation-setup.md](./references/automation-setup.md)
 - Default thresholds and protected branch config: [config.example.json](./config.example.json)
