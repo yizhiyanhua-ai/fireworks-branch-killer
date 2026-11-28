@@ -1,0 +1,33 @@
+# fireworks-branch-killer (fbk)
+
+> Zero-dependency deterministic Git worktree and feature-branch hygiene engine (`fbk`) with a self-evolving `fbk doctor` space-saving playbook for AI coding agents (Claude Code, Codex, Antigravity/AGY, Sourcegraph Amp, DeepSeek Harness, Amy, T3 Code, and Orca).
+
+`fireworks-branch-killer` (`fbk`) solves multi-agent workspace sprawl where parallel AI coding sessions leave hundreds of linked worktrees, duplicated `node_modules` / `.next` / `target` / `.venv` caches, Ghost branches merged via GitHub Squash or Cherry-pick Rebase, and 100k+ dangling `refs/remotes`. All mutations are dry-run by default and guarded by 4-Tier Fail-Closed checks and a hardened Recovery Vault.
+
+## Key Facts (v1.1.1)
+
+- **Official Website**: https://getfbk.dev/ (Chinese edition: https://getfbk.dev/zh/)
+- **Source & Releases**: https://github.com/yizhiyanhua-ai/fireworks-branch-killer (MIT License)
+- **Runtime**: Python 3.9+ stdlib + system `git` (0 third-party dependencies)
+- **Safety Model**: 4-Tier Fail-Closed classification (Tier 0 Safe Auto, Tier 1 Cache Slim, Tier 2 Review + Vault, Tier 3 Protected)
+- **Zero-Write Probing**: All scans use `--no-optional-locks`; virtual squash-merge probes run in an isolated temp `GIT_OBJECT_DIRECTORY`
+- **Hardened Recovery Vault (v1.1.1)**: Per-repo single aggregated multi-ref `.bundle` via `git bundle create --stdin` + `git bundle verify` + 5 GiB preflight disk headroom guard + shallow-clone Fail-Closed protection
+- **Hardlink-Aware Space Doctor**: `fbk doctor` samples `st_nlink > 1` to distinguish `pnpm` hardlinked stores from exclusive physical hogs (`.next/cache`, `target/`), and evolves `<state_dir>/playbook.md`
+- **Verification**: 33/33 isolated sandbox unit tests including Scale Canary (`< 1.5x` bundle volume across 30 branches)
+
+## Install & Quick Start
+
+- Install via `npx skills`: `npx -y skills@1.5.17 add yizhiyanhua-ai/fireworks-branch-killer/skills/fireworks-branch-killer --agent codex claude-code -g -y --copy`
+- Zero-install workspace checkup: `npx -y github:yizhiyanhua-ai/fireworks-branch-killer doctor --root .`
+- Preview safe Tier 0 cleanup: `python3 scripts/fbk.py plan --root . --tier 0`
+- Apply safe cleanup: `python3 scripts/fbk.py clean --root . --tier 0 --gc --apply`
+- Slim idle caches without deleting branches: `python3 scripts/fbk.py slim --root . --apply`
+
+## Core Resources
+
+- [Official Website (English)](https://getfbk.dev/): Interactive overview, dual-track natural language vs. CLI guide, 9-stack prevention matrix, comparison table, and FAQ
+- [Official Website (简体中文)](https://getfbk.dev/zh/): Complete static Simplified Chinese documentation and FAQ
+- [Full Knowledge Base (Markdown)](https://getfbk.dev/llms-full.txt): Comprehensive technical reference for LLM indexing, RAG, and agent tool discovery
+- [SKILL.md](https://github.com/yizhiyanhua-ai/fireworks-branch-killer/blob/main/SKILL.md): Agent skill entry point and natural-language routing triggers
+- [Safety Policy](https://github.com/yizhiyanhua-ai/fireworks-branch-killer/blob/main/references/safety-policy.md): 4-Tier deterministic rules, write-path invariants, and Recovery Vault specification
+- [Space-Saving Tips](https://github.com/yizhiyanhua-ai/fireworks-branch-killer/blob/main/references/space-saving-tips.md): Full-stack AI coding disk-prevention playbook across 9 stacks

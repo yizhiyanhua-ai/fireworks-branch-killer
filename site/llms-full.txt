@@ -1,0 +1,83 @@
+# fireworks-branch-killer (`fbk`) — Complete Technical Reference
+
+> Zero-dependency deterministic Git worktree & branch hygiene engine + self-evolving `fbk doctor` space-saving playbook for AI coding agents.
+> Canonical Site: https://getfbk.dev/ | Chinese: https://getfbk.dev/zh/ | GitHub: https://github.com/yizhiyanhua-ai/fireworks-branch-killer | Version: 1.1.1 | License: MIT
+
+---
+
+## 1. The Problem `fbk` Solves
+
+Multi-agent AI coding tools (Claude Code, Codex, Antigravity/AGY, Sourcegraph Amp, DeepSeek Harness, Amy, T3 Code, Orca) create linked worktrees and temporary branches for parallel tasks. Over weeks, this causes:
+1. **Worktree Explosion & Duplicated GBs**: Every worktree duplicates `node_modules`, `.next`, `target`, `dist`, and `.venv`.
+2. **Squash & Rebase Ghost Branches**: Standard `git branch --merged` fails to recognize GitHub Squash Merges or cherry-pick rebases, leaving finished feature branches stuck indefinitely.
+3. **Hardlink Accounting Blindness**: `pnpm` hardlinks `node_modules` files to a global store (`st_nlink > 1`). Deleting a single worktree often reclaims little physical disk unless paired with `pnpm store prune` and targeting exclusive physical hogs like `.next/cache` or Rust `target/`.
+4. **Remote Bloat & Broken Alternates**: Agents adding temporary local paths or duplicate canonical GitHub aliases accumulate 100k+ dangling `refs/remotes/*` and broken `.git/objects/info/alternates`.
+5. **Risk of Ad-Hoc `rm -rf` / `git branch -D`**: Letting an LLM improvise cleanup shell commands risks deleting live worktrees of active agents, unpushed commits, or untracked WIP files.
+
+---
+
+## 2. Architecture: Splitting LLM Judgment from Deterministic Execution
+
+| Capability | `fbk` (`fireworks-branch-killer`) | Raw `git branch -d` / `git worktree` | Ad-Hoc Agent `rm -rf` |
+| :--- | :--- | :--- | :--- |
+| Squash & Rebase merge detection | Zero-write 3-step waterfall (ancestor -> `git cherry` -> isolated `GIT_OBJECT_DIRECTORY` virtual squash) | Misses squash & rebase merges completely | Guesses or relies on `git branch --merged` |
+| Active agent & grace-period protection | Fail-closed `lsof` cwd check, 24h grace period, `index.lock`, `.fbk-keep`, `.delivery` | None | Risk of deleting another live agent's workspace |
+| Vault backup without disk amplification | Per-repo single aggregated multi-ref `.bundle` via `--stdin` (`git bundle verify`) | None | None or unsafe deletion |
+| Disk headroom & shallow clone guards | Fail-closed 5 GiB preflight `disk_usage` check + `--is-shallow-repository` guard | None | Can fill disk or drop shallow history |
+| Stack-level prevention & `pnpm` awareness | `fbk doctor` samples `st_nlink > 1`, flags `.gitignore` trailing-slash traps, evolves `playbook.md` | None | None |
+| Cross-harness compatibility | Unified `SKILL.md` + `SessionStart`/`PreToolUse` hooks for 7+ harnesses | Manual per repo | Inconsistent |
+
+---
+
+## 3. 4-Tier Fail-Closed Classification
+
+- **Tier 0 (`Safe Auto`)**: Clean merged worktrees & branches past the 24h grace period, broken worktree pointers, and merged detached HEAD commits. Verified via ancestor, cherry-pick, or isolated virtual squash probing.
+- **Tier 1 (`Cache Slim`)**: Idle worktrees containing rebuildable untracked build/dependency caches (`node_modules`, `.next`, `.nuxt`, `target`, `dist`, `build`, `.venv`, `__pycache__`) across 3 nested monorepo levels. Checks `git ls-files` to guarantee zero tracked files are deleted and uses `follow_symlinks=False` so `worktree.symlinkDirectories` targets are never deleted.
+- **Tier 2 (`Review + Vault`)**: Unmerged branches, unmerged detached HEADs, stashed branches (matched precisely per branch via `On <branch>:` / `WIP on <branch>:`), or dirty worktrees. Skipped unless `--allow-review` (and `--allow-dirty` for dirty trees) is passed, and archived to Recovery Vault first.
+- **Tier 3 (`Fail-Closed Protected`)**: Primary repos with dependent worktrees, protected branches (`main`, `master`, `develop`, `dev`, `release/*`, `prod*`, `--extra-base`), worktrees inside the 24h grace period, active `lsof` working directories, `index.lock`, `.fbk-keep`, `.delivery`, or failed `git status`.
+
+---
+
+## 4. Write-Path Safety Invariants (v1.1.1)
+
+1. **Per-Repo Aggregated Vault Bundles**: Before removing unmerged branches or unmerged detached HEADs, `execute_clean` batches all items per repository into a single `<repo_hash>-vault.bundle` using `git bundle create <path> --stdin` with temporary `refs/fbk-vault/*` refs cleaned in `finally`. Avoids 60–400x full-history duplication.
+2. **Preflight Disk Headroom Guard & Shallow Protection**: Checks `shutil.disk_usage >= min_free_disk_gb` (default `5.0` GiB, overridable via `--min-free-gb`) before writing Vault bundles, dirty snapshots, or cutover exports. Refuses unreliable Vault bundling on shallow clones unless `--allow-shallow-vault` is explicitly passed.
+3. **Post-Write Verification & Reversible Restore**: Runs `git bundle verify` and `git bundle list-heads` against every expected `(ref, sha)` before deleting source branches. `fbk restore <receipt_id> --apply` and `restore --extract-dirty-to` recover branches and untracked `.tar.gz` snapshots.
+
+---
+
+## 5. Self-Evolving `fbk doctor` & 9-Stack Prevention
+
+`fbk doctor --root .` inspects workspace stacks and updates `<state_dir>/evolution-profile.json` and `<state_dir>/playbook.md` (never inside your Git repository; pass `--no-evolve` for strict zero-write inspection):
+- **Claude Code**: `worktree.symlinkDirectories` and avoiding trailing slashes in `.gitignore` (`node_modules`, never `node_modules/`).
+- **JS / TS (`pnpm` & `bun`)**: `st_nlink > 1` detection, `pnpm store prune`, `virtualStoreType: global`, targeting `.next/cache`.
+- **Browser E2E (Playwright / Puppeteer / Cypress)**: Externalizing `PLAYWRIGHT_BROWSERS_PATH` / `PUPPETEER_CACHE_DIR` and `retain-on-failure` trace/video settings.
+- **Python & AI/ML**: `uv` with `UV_LINK_MODE=clone` on same APFS volume + external `HF_HOME` / `TORCH_HOME`.
+- **Rust**: `RUSTC_WRAPPER=sccache` and shared `CARGO_TARGET_DIR`.
+- **Go / Mobile / Docker / Git & APFS**: `GOMODCACHE`, `GRADLE_USER_HOME`, `docker compose down -v`, `cp -cR`, and `git maintenance start`.
+
+---
+
+## 6. Supported Harnesses & Governance Commands
+
+- **Harnesses**: Claude Code (`.claude/skills/`), Codex (`.agents/skills/` + `~/.codex/hooks.json`), Antigravity/AGY (`.agents/skills/` + `.agents/hooks.json`), Sourcegraph Amp (`.agents/skills/`), DeepSeek Harness, Amy, T3 Code, Orca.
+- **Commands**:
+  - `fbk scan --root . --fast --no-size`
+  - `fbk plan --root . --tier 0`
+  - `fbk clean --root . --tier 0 --gc --apply`
+  - `fbk slim --root . --apply`
+  - `fbk close --worktree /path/to/wt --apply`
+  - `fbk doctor --root .` / `fbk doctor --show-playbook` / `fbk doctor --learn "<lesson>" --stack <tag>`
+  - `fbk prune-remotes --repo /path/to/repo --dedupe-canonical --apply`
+  - `fbk audit-remote --repo /path/to/repo` (filters `origin/HEAD` symref, protects `prd`, `prod`, `test`, `qa`, `stage`, `staging`, `next`)
+  - `fbk repair-alternates --repo /path/to/repo --apply` (isolated proxy `git fsck --connectivity-only` gate)
+  - `fbk cutover-bundle --repo /path/to/repo --apply`
+  - `fbk restore --list` / `fbk restore <receipt_id> --apply`
+
+---
+
+## 7. Frequently Asked Questions
+
+- **Can `fbk` clean `node_modules` and caches without deleting branches?** Yes (`fbk slim --root . --apply`). It protects tracked files via `git ls-files` and skips symlinks.
+- **Why does deleting a `pnpm` worktree sometimes free little disk?** Because `pnpm` hardlinks files to a global store (`st_nlink > 1`). Pair cleanup with `pnpm store prune` or `virtualStoreType: global`.
+- **How does `fbk` prevent Recovery Vault bloat on large monorepos?** `v1.1.1` aggregates all unmerged refs for a repository into one `.bundle` via `--stdin`, verifies it with `git bundle verify`, enforces a 5 GiB preflight free-disk check, and blocks unsafe shallow-clone bundling.

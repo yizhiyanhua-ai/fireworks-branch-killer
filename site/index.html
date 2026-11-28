@@ -19,21 +19,163 @@ try {
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="theme-color" content="#ff5226">
 <link rel="canonical" href="https://getfbk.dev/">
+<link rel="alternate" hreflang="en" href="https://getfbk.dev/">
+<link rel="alternate" hreflang="zh-CN" href="https://getfbk.dev/zh/">
+<link rel="alternate" hreflang="x-default" href="https://getfbk.dev/">
+<link rel="alternate" type="text/markdown" title="LLMs.txt (GEO)" href="https://getfbk.dev/llms.txt">
 <meta property="og:type" content="website">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
 <meta property="og:site_name" content="fireworks-branch-killer (getfbk.dev)">
 <meta property="og:title" content="fireworks-branch-killer (fbk) — Deterministic Git Worktree Hygiene & Self-Evolving Space Doctor">
 <meta property="og:description" content="Reclaim tens of GBs across multi-agent worktrees without risking active agents or squash-merged code. Self-evolving fbk doctor + 4-Tier Fail-Closed engine + Recovery Vault.">
 <meta property="og:url" content="https://getfbk.dev/">
-<meta property="og:image" content="https://getfbk.dev/assets/og-card.png">
+<meta property="og:image" content="https://getfbk.dev/assets/og-card-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:alt" content="fireworks-branch-killer (fbk) deterministic Git worktree hygiene and self-evolving fbk doctor">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="fireworks-branch-killer (fbk) — getfbk.dev">
 <meta name="twitter:description" content="Zero-dependency deterministic Git worktree & branch hygiene engine + self-evolving fbk doctor for Claude Code, Codex, AGY, and Amp.">
-<meta name="twitter:image" content="https://getfbk.dev/assets/og-card.png">
+<meta name="twitter:image" content="https://getfbk.dev/assets/og-card-1200x630.png">
+<meta name="twitter:image:alt" content="fireworks-branch-killer (fbk) — Stop AI Agents From Turning Your Disk Into a Worktree Graveyard">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="assets/logo.png">
 <link rel="manifest" href="site.webmanifest">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"fireworks-branch-killer","alternateName":"fbk","softwareVersion":"1.1.1","applicationCategory":"DeveloperApplication","operatingSystem":"macOS, Linux (Cross-platform Python 3.9+)","description":"Zero-dependency deterministic Git worktree and branch hygiene engine with zero-write 3-step merge waterfall, Recovery Vault, and self-evolving fbk doctor space-saving playbook.","url":"https://getfbk.dev/","downloadUrl":"https://github.com/yizhiyanhua-ai/fireworks-branch-killer/releases/tag/v1.1.1","license":"https://github.com/yizhiyanhua-ai/fireworks-branch-killer/blob/main/LICENSE","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"yizhiyanhua-ai","url":"https://github.com/yizhiyanhua-ai"}}
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://getfbk.dev/#website",
+      "url": "https://getfbk.dev/",
+      "name": "fireworks-branch-killer (fbk)",
+      "inLanguage": ["en", "zh-CN"]
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://getfbk.dev/#org",
+      "name": "yizhiyanhua-ai",
+      "url": "https://github.com/yizhiyanhua-ai",
+      "logo": "https://getfbk.dev/assets/logo.png"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://getfbk.dev/#software",
+      "name": "fireworks-branch-killer",
+      "alternateName": "fbk",
+      "softwareVersion": "1.1.1",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "macOS, Linux (Cross-platform Python 3.9+)",
+      "programmingLanguage": "Python",
+      "codeRepository": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer",
+      "description": "Zero-dependency deterministic Git worktree and branch hygiene engine with zero-write 3-step merge waterfall, per-repo aggregated Recovery Vault, and self-evolving fbk doctor space-saving playbook.",
+      "url": "https://getfbk.dev/",
+      "screenshot": "https://getfbk.dev/assets/og-card-1200x630.png",
+      "downloadUrl": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer/releases/tag/v1.1.1",
+      "license": "https://github.com/yizhiyanhua-ai/fireworks-branch-killer/blob/main/LICENSE",
+      "featureList": [
+        "4-Tier Fail-Closed Git worktree and branch classification",
+        "Zero-write 3-step merge detection (ancestor, git cherry, isolated GIT_OBJECT_DIRECTORY virtual squash)",
+        "Self-evolving fbk doctor playbook with hardlink st_nlink > 1 detection",
+        "Per-repo aggregated Recovery Vault bundles with 5 GiB preflight disk guard and shallow clone protection",
+        "Hooks and skill integration for Claude Code, Codex, Antigravity (AGY), Amp, DeepSeek Harness, Amy, T3 Code, and Orca"
+      ],
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+      "author": {"@id": "https://getfbk.dev/#org"}
+    },
+    {
+      "@type": "HowTo",
+      "@id": "https://getfbk.dev/#howto",
+      "name": "How to safely clean AI coding Git worktrees and reclaim disk space with fbk",
+      "description": "Run a self-evolving workspace checkup, preview deterministic Tier 0 cleanup, and reclaim disk space safely with Recovery Vault protection.",
+      "step": [
+        {
+          "@type": "HowToStep",
+          "position": 1,
+          "name": "Diagnose workspace stacks and hardlinked stores",
+          "text": "Run `fbk doctor --root .` to detect pnpm hardlinks, .gitignore symlink traps, and build-cache hogs."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 2,
+          "name": "Preview safe cleanup without touching real repositories",
+          "text": "Run `fbk plan --root . --tier 0` to verify ancestor, cherry-pick, and virtual squash-merged branches before deletion."
+        },
+        {
+          "@type": "HowToStep",
+          "position": 3,
+          "name": "Execute safe cleanup or slim caches only",
+          "text": "Run `fbk clean --root . --tier 0 --gc --apply` to remove merged worktrees, or `fbk slim --root . --apply` to delete idle caches while preserving all code and branches."
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://getfbk.dev/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Does fbk clean untracked node_modules and build caches if I keep the branch?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Run `fbk slim --root . --apply`. It recursively scans 3 levels for monorepos, checks lsof for active processes and git ls-files to protect tracked files, skips symlinks (follow_symlinks=False), and trims node_modules, .next, target, dist, and .venv without deleting your code or branch."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does deleting a pnpm worktree sometimes reclaim little disk space?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Standard pnpm hardlinks files in node_modules to a global store. Unlinking one worktree does not reclaim physical blocks while the store holds references. fbk doctor samples st_nlink > 1 to detect this and reminds you to pair cleanups with pnpm store prune (or enable virtualStoreType: global), while targeting exclusive physical hogs like target/ and .next/cache."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does fbk doctor modify my Git repository or commit anything?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Your personal evolving playbook.md and evolution-profile.json live inside <state_dir> (~/.cache/fireworks-branch-killer or --state-dir), never inside your repo. Pass --no-evolve for zero state writes."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can it safely detect GitHub Squash Merges and Rebase merges?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Unlike plain git branch --merged, fbk runs a zero-write 3-step waterfall: ancestor check, git cherry, and virtual squash merge inside an isolated temporary GIT_OBJECT_DIRECTORY, writing zero loose objects into your real repo."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What happens if I regret deleting an unmerged branch?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Every non-ancestor deletion, detached unmerged HEAD, or dirty worktree snapshots a verifiable .bundle (plus git diff and untracked .tar.gz) into Recovery Vault before removal. Run fbk restore --list and fbk restore <receipt_id> --apply to recover cleanly."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does the skill work with Claude Code, Codex, and Amp without separate versions?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "All three follow the open SKILL.md standard under .agents/skills/ (with .claude/skills/ symlinked or copied). Installing once via npx skills gives every compatible agent identical deterministic safety guardrails."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does fbk avoid filling the disk when archiving hundreds of unmerged branches?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Since v1.1.1, fbk aggregates all unmerged branches and detached HEADs per repository into a single multi-ref .bundle via git bundle create --stdin, verifies every ref with git bundle verify, enforces a fail-closed 5 GiB preflight disk headroom check (--min-free-gb), and blocks unsafe shallow-clone bundling."
+          }
+        }
+      ]
+    }
+  ]
+}
 </script>
 <style>
   :root {
@@ -1039,6 +1181,46 @@ try {
           <figcaption class="diagram-cap" data-i18n="diag2">Zero-write 3-step merge waterfall &amp; Recovery Vault safety chain</figcaption>
         </figure>
       </div>
+
+      <div tabindex="0" role="region" aria-labelledby="tbl-cmp-cap" class="table-wrapper" style="margin-top: 28px;">
+        <table class="data-table" id="tbl-cmp" style="--label-1:'Capability';--label-2:'fbk (v1.1.1)';--label-3:'Raw Git CLI';--label-4:'Ad-Hoc Agent rm -rf';">
+          <caption id="tbl-cmp-cap" class="sr-only">Comparison between fbk, raw Git CLI, and ad-hoc agent shell cleanup</caption>
+          <thead>
+            <tr>
+              <th data-i18n="cm_c1">Capability</th>
+              <th data-i18n="cm_c2">fbk (v1.1.1)</th>
+              <th data-i18n="cm_c3">Raw Git CLI</th>
+              <th data-i18n="cm_c4">Ad-Hoc Agent <code>rm -rf</code></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row" data-i18n="cm_r1_k">Squash &amp; Rebase merge detection</th>
+              <td data-i18n="cm_r1_v1">Zero-write 3-step waterfall (ancestor + <code>git cherry</code> + isolated virtual squash)</td>
+              <td data-i18n="cm_r1_v2"><code>git branch --merged</code> misses squash &amp; rebase</td>
+              <td data-i18n="cm_r1_v3">Unreliable LLM guesses</td>
+            </tr>
+            <tr>
+              <th scope="row" data-i18n="cm_r2_k">Live agent &amp; WIP safety</th>
+              <td data-i18n="cm_r2_v1">Fail-closed <code>lsof</code> cwd check, 24h grace, <code>.fbk-keep</code>, <code>.delivery</code></td>
+              <td data-i18n="cm_r2_v2">Manual inspection per worktree</td>
+              <td data-i18n="cm_r2_v3">Can wipe active worktrees</td>
+            </tr>
+            <tr>
+              <th scope="row" data-i18n="cm_r3_k">Reversible Recovery Vault</th>
+              <td data-i18n="cm_r3_v1">1 aggregated <code>.bundle</code>/repo + 5 GiB disk guard + shallow protection</td>
+              <td data-i18n="cm_r3_v2">None (manual <code>reflog</code> expiry)</td>
+              <td data-i18n="cm_r3_v3">Permanent data loss</td>
+            </tr>
+            <tr>
+              <th scope="row" data-i18n="cm_r4_k">Cache slim &amp; <code>pnpm</code> hardlinks</th>
+              <td data-i18n="cm_r4_v1"><code>fbk doctor</code> samples <code>st_nlink &gt; 1</code> + 3-level safe cache slim</td>
+              <td data-i18n="cm_r4_v2">None</td>
+              <td data-i18n="cm_r4_v3">May follow symlinks or delete tracked <code>dist/</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </section>
 
@@ -1136,6 +1318,10 @@ try {
           <summary data-i18n="q6">Why does the skill work with Claude Code, Codex, and Amp without separate versions?</summary>
           <div class="faq-body" data-i18n="a6">All three follow the open <code>SKILL.md</code> standard under <code>.agents/skills/</code> (with <code>.claude/skills/</code> symlinked or copied). Installing once via <code>npx skills</code> gives every compatible agent identical deterministic safety guardrails.</div>
         </details>
+        <details>
+          <summary data-i18n="q7">How does fbk avoid filling the disk when archiving hundreds of unmerged branches?</summary>
+          <div class="faq-body" data-i18n="a7">Since <code>v1.1.1</code>, <code>fbk</code> batches all unmerged branches and detached HEADs per repository into a single multi-ref <code>.bundle</code> via <code>git bundle create --stdin</code>, verifies every ref with <code>git bundle verify</code>, enforces a fail-closed 5 GiB preflight disk headroom check (<code>--min-free-gb</code>), and blocks unsafe shallow-clone bundling.</div>
+        </details>
       </div>
     </div>
   </section>
@@ -1144,9 +1330,11 @@ try {
 <footer>
   <div class="wrap foot-in">
     <div>
-      <strong>fireworks-branch-killer</strong> · <a href="https://getfbk.dev">getfbk.dev</a> · Part of the <a href="https://github.com/yizhiyanhua-ai" target="_blank" rel="noopener">yizhiyanhua-ai</a> suite · MIT License
+      <strong>fireworks-branch-killer</strong> · <a href="https://getfbk.dev/">getfbk.dev</a> · <a href="/zh/">中文版</a> · Part of the <a href="https://github.com/yizhiyanhua-ai" target="_blank" rel="noopener">yizhiyanhua-ai</a> suite · MIT License
     </div>
     <div class="foot-links">
+      <a href="/llms.txt">llms.txt</a>
+      <a href="/llms-full.txt">llms-full.txt</a>
       <a href="https://github.com/yizhiyanhua-ai/fireworks-branch-killer" target="_blank" rel="noopener">GitHub</a>
       <a href="https://github.com/yizhiyanhua-ai/fireworks-branch-killer/releases/tag/v1.1.1" target="_blank" rel="noopener">v1.1.1 Release</a>
       <a href="https://github.com/yizhiyanhua-ai/fireworks-branch-killer/blob/main/references/space-saving-tips.md" target="_blank" rel="noopener">Space Tips</a>
@@ -1296,6 +1484,26 @@ try {
     t3_d: "主仓库、受保护分支、活跃进程 <code>cwd</code>、<code>index.lock</code>、<code>.fbk-keep</code>、<code>.delivery</code> 与 24h 新建保护。",
     diag1: "从 worktree 爆炸、Squash 幽灵分支到确定性闭环治理",
     diag2: "零写入三步合并瀑布与 Recovery Vault 可逆保险链路",
+    cm_c1: "核心能力对比",
+    cm_c2: "fbk (v1.1.1)",
+    cm_c3: "原生 Git CLI",
+    cm_c4: "模型临场 <code>rm -rf</code>",
+    cm_r1_k: "Squash / Rebase 合并识别",
+    cm_r1_v1: "零写入三步瀑布（祖先 + <code>git cherry</code> + 隔离虚拟 squash）",
+    cm_r1_v2: "<code>git branch --merged</code> 完全识别不了",
+    cm_r1_v3: "靠猜，极易误删",
+    cm_r2_k: "活跃 Agent 与在途保护",
+    cm_r2_v1: "Fail-Closed <code>lsof</code> 进程检测、24h 冷却、<code>.fbk-keep</code>、<code>.delivery</code>",
+    cm_r2_v2: "需逐个手工排查",
+    cm_r2_v3: "可能删掉另一路 Agent 的工作区",
+    cm_r3_k: "可逆恢复保险丝",
+    cm_r3_v1: "单仓聚合 1 份 <code>.bundle</code> + 5 GiB 写前门禁 + 浅克隆保护",
+    cm_r3_v2: "无（依赖会过期的 <code>reflog</code>）",
+    cm_r3_v3: "永久丢代码",
+    cm_r4_k: "缓存瘦身与 <code>pnpm</code> 硬链接",
+    cm_r4_v1: "<code>fbk doctor</code> 采样 <code>st_nlink &gt; 1</code> + 3 层安全缓存清理",
+    cm_r4_v2: "无",
+    cm_r4_v3: "可能误跟软链或删掉被跟踪的 <code>dist/</code>",
     har_kicker: "7+ 主流工具原生兼容",
     har_h2: "一套 Skill，覆盖全生命周期防复发护栏。",
     har_sub: "<code>SessionStart</code> 温和体检提示，<code>PreToolUse</code> 在新增本地 <code>/tmp</code> remote 或超额建 worktree 前主动拦截。",
@@ -1314,7 +1522,9 @@ try {
     q5: "如果误删了未合并实验分支或需要找回未提交文件怎么办？",
     a5: "任何非祖先分支、未合并 detached HEAD 或脏工作树在删除前都会强制将完整 <code>.bundle</code>、<code>diff</code> 和未跟踪文件归档到 Recovery Vault。运行 <code>fbk restore --list</code> 和 <code>fbk restore &lt;receipt_id&gt; --apply</code> 即可一键还原。",
     q6: "为什么同一份 Skill 可以直接在 Claude Code、Codex 和 Amp 里用？",
-    a6: "它们都遵循 <code>.agents/skills/</code> 开放 <code>SKILL.md</code> 标准（Claude Code 同时支持 <code>.claude/skills/</code>）。用 <code>npx skills</code> 装一次，所有工具就能共享同一套确定性安全护栏。"
+    a6: "它们都遵循 <code>.agents/skills/</code> 开放 <code>SKILL.md</code> 标准（Claude Code 同时支持 <code>.claude/skills/</code>）。用 <code>npx skills</code> 装一次，所有工具就能共享同一套确定性安全护栏。",
+    q7: "批量归档几百条未合入分支时，如何防止 Recovery Vault 反向把磁盘写爆？",
+    a7: "从 <code>v1.1.1</code> 起，<code>fbk</code> 在清理前会先按仓库汇集所有待归档分支与 detached HEAD，每个仓仅通过 <code>git bundle create --stdin</code> 生成 <strong>1 份共享多引用 <code>.bundle</code></strong>（杜绝 60–400× 重复打包），写后自动执行 <code>git bundle verify</code> 校验，并默认启用 5 GiB 写前磁盘剩余空间门禁（<code>--min-free-gb</code>）与浅克隆 Fail-Closed 保护。"
   };
 
   const EN_SNAPSHOT = {};
@@ -1323,8 +1533,18 @@ try {
   });
 
   const DUAL_LABELS = {
-    en: ["--label-1:'Goal';--label-2:'Ask Your Agent Naturally';--label-3:'Deterministic CLI';", "--label-1:'Stack / Layer';--label-2:'Root-Cause Mechanism';--label-3:'Critical Gotcha & fbk Synergy';", "--label-1:'Harness';--label-2:'Skill Discovery';--label-3:'Hooks & Guard';--label-4:'Auto-Detected Worktrees';"],
-    zh: ["--label-1:'使用场景';--label-2:'对 Agent 直接说人话';--label-3:'确定性 CLI 命令';", "--label-1:'技术栈 / 环节';--label-2:'根源省空间机制';--label-3:'关键踩坑与 fbk 联动';", "--label-1:'Harness';--label-2:'Skill 发现目录';--label-3:'Hooks 与护栏';--label-4:'自动识别的 Worktree';"]
+    en: [
+      "--label-1:'Goal';--label-2:'Ask Your Agent Naturally';--label-3:'Deterministic CLI';",
+      "--label-1:'Stack / Layer';--label-2:'Root-Cause Mechanism';--label-3:'Critical Gotcha & fbk Synergy';",
+      "--label-1:'Capability';--label-2:'fbk (v1.1.1)';--label-3:'Raw Git CLI';--label-4:'Ad-Hoc Agent rm -rf';",
+      "--label-1:'Harness';--label-2:'Skill Discovery';--label-3:'Hooks & Guard';--label-4:'Auto-Detected Worktrees';"
+    ],
+    zh: [
+      "--label-1:'使用场景';--label-2:'对 Agent 直接说人话';--label-3:'确定性 CLI 命令';",
+      "--label-1:'技术栈 / 环节';--label-2:'根源省空间机制';--label-3:'关键踩坑与 fbk 联动';",
+      "--label-1:'核心能力对比';--label-2:'fbk (v1.1.1)';--label-3:'原生 Git CLI';--label-4:'模型临场 rm -rf';",
+      "--label-1:'Harness';--label-2:'Skill 发现目录';--label-3:'Hooks 与护栏';--label-4:'自动识别的 Worktree';"
+    ]
   };
 
   let currentLang = "en";
@@ -1338,7 +1558,8 @@ try {
     const labels = DUAL_LABELS[currentLang];
     document.getElementById("tbl-dual").setAttribute("style", labels[0]);
     document.getElementById("tbl-tips").setAttribute("style", labels[1]);
-    document.getElementById("tbl-har").setAttribute("style", labels[2]);
+    document.getElementById("tbl-cmp").setAttribute("style", labels[2]);
+    document.getElementById("tbl-har").setAttribute("style", labels[3]);
     try { localStorage.setItem("fbk-site-lang", currentLang); } catch (e) {}
   }
 
